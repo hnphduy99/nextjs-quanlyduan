@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// === ENUMS ===
+enum Role {
+  ADMIN
+  PM
+  MEMBER
+}
+
+enum ProjectCategory {
+  GPS_AN_NINH   // GPS An ninh
+  KHCP_DN       // Dự án KHCP/DN
+  GIAO_TIEP_CAN // Giao tiếp cận
+}
+
+enum DeploymentType {
+  MUA  // Mua
+  THUE // Thuê
+}
+
+// === MODELS ===
+
+/// Bảng người dùng - Lưu thông tin tài khoản và vai trò (RBAC)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // Hash bằng bcrypt
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Quan hệ
+  projects    Project[]    // Dự án do user tạo
+  projectLogs ProjectLog[] // Log cập nhật tiến độ
+
+  @@map("users")
+}
+
+/// Bảng dự án - Lưu thông tin dự án kèm tiến độ hiện tại
+model Project {
+  id               String          @id @default(cuid())
+  name             String
+  description      String?         @db.Text
+
+  // Phân loại dự án
+  category         ProjectCategory @default(GPS_AN_NINH)
+
+  // Thông tin khách hàng
+  investor         String?         // Chủ đầu tư
+  expectedRevenue  Float?          // Doanh thu dự kiến (trđ)
+  decisionMaker    String?         @db.Text // Người quyết định (tên_sdt)
+  contactPerson    String?         @db.Text // Đầu mối (tên_sdt)
+
+  // Hình thức triển khai
+  deploymentType   DeploymentType  @default(MUA)
+
+  // Đánh giá
+  feasibilityScore Int?            // Đánh giá khả thi (0-100%)
+
+  // Ngày dự kiến nghiệm thu
+  expectedCompletionDate DateTime? @map("expected_completion_date")
+
+  // Tiến độ hiện tại
+  currentStepOrder Int             @default(1) @map("current_step_order")
+  percentage       Int             @default(0) // 0-100% (tự tính theo bước)
+
+  createdById      String          @map("created_by_id")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  // Quan hệ
+  createdBy User               @relation(fields: [createdById], references: [id])
+  steps     ProjectStepConfig[]
+  logs      ProjectLog[]
+  files     ProjectFile[]
+
+  @@map("projects")
+}
+
+/// Bảng cấu hình bước - 4 bước cố định mỗi dự án
+model ProjectStepConfig {
+  id        String    @id @default(cuid())
+  projectId String    @map("project_id")
+  stepName  String    @map("step_name")
+  stepOrder Int       @map("step_order") // 1,2,3,4
+
+  // Thời gian bước
+  startDate DateTime? @map("start_date")
+  endDate   DateTime? @map("end_date")
+
+  // Quan hệ
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Constraint: mỗi dự án chỉ có 1 bước với mỗi step_order
+  @@unique([projectId, stepOrder])
+  @@map("project_step_configs")
+}
+
+/// Bảng log audit - Ghi lại mọi thay đổi tiến độ để theo dõi
+model ProjectLog {
+  id            String   @id @default(cuid())
+  projectId     String   @map("project_id")
+  updatedById   String   @map("updated_by_id")
+  oldStep       Int      @map("old_step")
+  newStep       Int      @map("new_step")
+  oldPercentage Int      @map("old_percentage")
+  newPercentage Int      @map("new_percentage")
+  note          String?  @db.Text // Tiến độ/Kết quả đã triển khai
+  nextPlan      String?  @db.Text @map("next_plan") // Kế hoạch triển khai tiếp theo
+  changedAt     DateTime @default(now()) @map("changed_at")
+
+  // Quan hệ
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  updatedBy User    @relation(fields: [updatedById], references: [id])
+
+  @@map("project_logs")
+}
+
+/// Bảng file đính kèm - Upload theo từng bước dự án
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  stepOrder Int      @map("step_order") // Bước mà file được gắn vào
+  fileName  String   @map("file_name")  // Tên gốc của file
+  filePath  String   @map("file_path")  // Đường dẫn lưu trữ
+  fileType  String   @map("file_type")  // MIME type
+  fileSize  Int      @map("file_size")  // Kích thước (bytes)
+  uploadedById String @map("uploaded_by_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Quan hệ
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_files")
+}

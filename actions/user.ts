@@ -1,0 +1,134 @@
+"use server";
+
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1, "Tên không được trống").max(100),
+  email: z.string().email("Email không hợp lệ"),
+  password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
+  role: z.enum(["ADMIN", "PM", "MEMBER"])
+});
+
+const UpdateUserSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1, "Tên không được trống").max(100),
+  email: z.string().email("Email không hợp lệ"),
+  role: z.enum(["ADMIN", "PM", "MEMBER"]),
+  password: z.string().optional()
+});
+
+export async function getUsers() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.role !== "ADMIN") return [];
+
+  return prisma.user.findMany({
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    orderBy: { createdAt: "desc" }
+  });
+}
+
+export async function createUser(
+  _prevState: { error?: string; success?: boolean } | null,
+  formData: FormData
+) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    return { error: "Bạn không có quyền thực hiện thao tác này" };
+  }
+
+  try {
+    const raw = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      role: formData.get("role") as string
+    };
+
+    const validated = CreateUserSchema.parse(raw);
+
+    const existing = await prisma.user.findUnique({ where: { email: validated.email } });
+    if (existing) return { error: "Email này đã được sử dụng" };
+
+    const bcrypt = await import("bcryptjs");
+    const hashedPassword = await bcrypt.hash(validated.password, 10);
+
+    await prisma.user.create({
+      data: {
+        name: validated.name,
+        email: validated.email,
+        password: hashedPassword,
+        role: validated.role as "ADMIN" | "PM" | "MEMBER"
+      }
+    });
+
+    revalidatePath("/users");
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) return { error: error.issues[0].message };
+    return { error: "Có lỗi xảy ra khi tạo người dùng" };
+  }
+}
+
+export async function updateUser(
+  _prevState: { error?: string; success?: boolean } | null,
+  formData: FormData
+) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    return { error: "Bạn không có quyền thực hiện thao tác này" };
+  }
+
+  try {
+    const raw = {
+      id: formData.get("id") as string,
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      role: formData.get("role") as string,
+      password: (formData.get("password") as string) || undefined
+    };
+
+    const validated = UpdateUserSchema.parse(raw);
+
+    const updateData: Record<string, unknown> = {
+      name: validated.name,
+      email: validated.email,
+      role: validated.role
+    };
+
+    if (validated.password && validated.password.trim().length >= 6) {
+      const bcrypt = await import("bcryptjs");
+      updateData.password = await bcrypt.hash(validated.password, 10);
+    }
+
+    await prisma.user.update({ where: { id: validated.id }, data: updateData });
+
+    revalidatePath("/users");
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) return { error: error.issues[0].message };
+    return { error: "Có lỗi xảy ra khi cập nhật người dùng" };
+  }
+}
+
+export async function deleteUser(userId: string): Promise<{ error?: string; success?: boolean }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    return { error: "Bạn không có quyền thực hiện thao tác này" };
+  }
+  if (currentUser.id === userId) {
+    return { error: "Không thể xóa chính mình" };
+  }
+
+  try {
+    await prisma.user.delete({ where: { id: userId } });
+    revalidatePath("/users");
+    return { success: true };
+  } catch {
+    return { error: "Có lỗi xảy ra khi xóa người dùng" };
+  }
+}
