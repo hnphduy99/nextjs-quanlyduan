@@ -74,6 +74,7 @@ export function ProgressUpdateForm({
     disabled: currentPercentage === 100
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedStep = watch("newStepOrder");
   const previewPercentage = STEP_PERCENTAGE[selectedStep] ?? currentPercentage;
 

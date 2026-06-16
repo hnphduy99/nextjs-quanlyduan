@@ -292,7 +292,7 @@ export default async function DashboardPage({
                 <div className="divide-y divide-(--color-border)">
                   {overdueProjects.map((p) => {
                     const currentStep = p.steps.find((s) => s.stepOrder === p.currentStepOrder);
-                    const isOverdue = currentStep?.endDate && currentStep.endDate < new Date();
+                    // const isOverdue = currentStep?.endDate && currentStep.endDate < new Date();
                     return (
                       <Link
                         key={p.id}
