@@ -3,7 +3,7 @@
 import { logoutAction } from "@/actions/auth";
 import type { Role } from "@/app/generated/prisma/client";
 import { cn } from "@/lib/utils";
-import { BarChart3, ChevronLeft, ChevronRight, FolderKanban, LogOut, Users } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, FolderKanban, LogOut, Users, ScrollText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -32,6 +32,12 @@ const navItems = [
     label: "Người dùng",
     href: "/users",
     icon: Users,
+    roles: ["ADMIN"]
+  },
+  {
+    label: "Nhật ký hoạt động",
+    href: "/logs",
+    icon: ScrollText,
     roles: ["ADMIN"]
   }
 ];

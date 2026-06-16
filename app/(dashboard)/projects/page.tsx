@@ -123,7 +123,7 @@ export default async function ProjectsPage() {
                           Chi tiết <ArrowRight className="ml-1 h-3 w-3" />
                         </Badge>
                       </Link>
-                      {canDelete && project.percentage !== 100 && (
+                      {(canDelete || project.percentage !== 100) && (
                         <DeleteProjectButton projectId={project.id} projectName={project.name} />
                       )}
                     </div>

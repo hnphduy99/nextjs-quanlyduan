@@ -24,8 +24,8 @@ async function main() {
       email: "admin@test.com",
       name: "Admin",
       password: hashedPassword,
-      role: "ADMIN",
-    },
+      role: "ADMIN"
+    }
   });
 
   const pm = await prisma.user.upsert({
@@ -35,8 +35,8 @@ async function main() {
       email: "pm@test.com",
       name: "Project Manager",
       password: hashedPassword,
-      role: "PM",
-    },
+      role: "PM"
+    }
   });
 
   const member = await prisma.user.upsert({
@@ -46,8 +46,8 @@ async function main() {
       email: "member@test.com",
       name: "Member User",
       password: hashedPassword,
-      role: "MEMBER",
-    },
+      role: "MEMBER"
+    }
   });
 
   console.log("✅ Đã tạo 3 users:", admin.email, pm.email, member.email);
@@ -65,10 +65,10 @@ async function main() {
           { stepName: "Tiếp cận", stepOrder: 1 },
           { stepName: "Liên hệ", stepOrder: 2 },
           { stepName: "Báo giá", stepOrder: 3 },
-          { stepName: "Ký hợp đồng", stepOrder: 4 },
-        ],
-      },
-    },
+          { stepName: "Ký hợp đồng", stepOrder: 4 }
+        ]
+      }
+    }
   });
 
   await prisma.projectLog.create({
@@ -79,8 +79,8 @@ async function main() {
       newStep: 2,
       oldPercentage: 10,
       newPercentage: 35,
-      note: "Đã liên hệ khách hàng, chuyển sang giai đoạn trao đổi chi tiết",
-    },
+      note: "Đã liên hệ khách hàng, chuyển sang giai đoạn trao đổi chi tiết"
+    }
   });
 
   console.log("✅ Đã tạo dự án A:", projectA.name);
@@ -88,18 +88,17 @@ async function main() {
   const projectB = await prisma.project.create({
     data: {
       name: "Triển khai CRM cho XYZ Corp",
-      description:
-        "Triển khai hệ thống CRM tùy chỉnh cho XYZ Corp, bao gồm quản lý khách hàng và pipeline bán hàng.",
+      description: "Triển khai hệ thống CRM tùy chỉnh cho XYZ Corp, bao gồm quản lý khách hàng và pipeline bán hàng.",
       currentStepOrder: 1,
       percentage: 10,
       createdById: member.id,
       steps: {
         create: [
           { stepName: "Tiếp cận", stepOrder: 1 },
-          { stepName: "Triển khai", stepOrder: 2 },
-        ],
-      },
-    },
+          { stepName: "Triển khai", stepOrder: 2 }
+        ]
+      }
+    }
   });
 
   console.log("✅ Đã tạo dự án B:", projectB.name);
@@ -107,8 +106,7 @@ async function main() {
   const projectC = await prisma.project.create({
     data: {
       name: "App Mobile Quản lý Kho",
-      description:
-        "Ứng dụng mobile quản lý kho hàng cho chuỗi cửa hàng tiện lợi.",
+      description: "Ứng dụng mobile quản lý kho hàng cho chuỗi cửa hàng tiện lợi.",
       currentStepOrder: 3,
       percentage: 100,
       createdById: pm.id,
@@ -116,10 +114,10 @@ async function main() {
         create: [
           { stepName: "Khảo sát", stepOrder: 1 },
           { stepName: "Phát triển", stepOrder: 2 },
-          { stepName: "Nghiệm thu", stepOrder: 3 },
-        ],
-      },
-    },
+          { stepName: "Nghiệm thu", stepOrder: 3 }
+        ]
+      }
+    }
   });
 
   await prisma.projectLog.createMany({
@@ -131,7 +129,7 @@ async function main() {
         newStep: 2,
         oldPercentage: 0,
         newPercentage: 50,
-        note: "Bắt đầu phát triển",
+        note: "Bắt đầu phát triển"
       },
       {
         projectId: projectC.id,
@@ -140,9 +138,9 @@ async function main() {
         newStep: 3,
         oldPercentage: 50,
         newPercentage: 100,
-        note: "Hoàn thành nghiệm thu, bàn giao khách hàng",
-      },
-    ],
+        note: "Hoàn thành nghiệm thu, bàn giao khách hàng"
+      }
+    ]
   });
 
   console.log("✅ Đã tạo dự án C:", projectC.name);

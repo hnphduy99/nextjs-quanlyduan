@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logActivity } from "@/lib/audit-logger";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -32,10 +33,7 @@ export async function getUsers() {
   });
 }
 
-export async function createUser(
-  _prevState: { error?: string; success?: boolean } | null,
-  formData: FormData
-) {
+export async function createUser(_prevState: { error?: string; success?: boolean } | null, formData: FormData) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "ADMIN") {
     return { error: "Bạn không có quyền thực hiện thao tác này" };
@@ -57,13 +55,20 @@ export async function createUser(
     const bcrypt = await import("bcryptjs");
     const hashedPassword = await bcrypt.hash(validated.password, 10);
 
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name: validated.name,
         email: validated.email,
         password: hashedPassword,
         role: validated.role as "ADMIN" | "PM" | "MEMBER"
       }
+    });
+
+    await logActivity(currentUser.id, "CREATE_USER", {
+      targetUserId: newUser.id,
+      targetName: newUser.name,
+      targetEmail: newUser.email,
+      targetRole: newUser.role
     });
 
     revalidatePath("/users");
@@ -74,10 +79,7 @@ export async function createUser(
   }
 }
 
-export async function updateUser(
-  _prevState: { error?: string; success?: boolean } | null,
-  formData: FormData
-) {
+export async function updateUser(_prevState: { error?: string; success?: boolean } | null, formData: FormData) {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "ADMIN") {
     return { error: "Bạn không có quyền thực hiện thao tác này" };
@@ -105,7 +107,14 @@ export async function updateUser(
       updateData.password = await bcrypt.hash(validated.password, 10);
     }
 
-    await prisma.user.update({ where: { id: validated.id }, data: updateData });
+    const updatedUser = await prisma.user.update({ where: { id: validated.id }, data: updateData });
+
+    await logActivity(currentUser.id, "UPDATE_USER", {
+      targetUserId: updatedUser.id,
+      targetName: updatedUser.name,
+      targetEmail: updatedUser.email,
+      targetRole: updatedUser.role
+    });
 
     revalidatePath("/users");
     return { success: true };
@@ -125,7 +134,18 @@ export async function deleteUser(userId: string): Promise<{ error?: string; succ
   }
 
   try {
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser) return { error: "Không tìm thấy người dùng" };
+
     await prisma.user.delete({ where: { id: userId } });
+
+    await logActivity(currentUser.id, "DELETE_USER", {
+      targetUserId: targetUser.id,
+      targetName: targetUser.name,
+      targetEmail: targetUser.email,
+      targetRole: targetUser.role
+    });
+
     revalidatePath("/users");
     return { success: true };
   } catch {

@@ -18,7 +18,10 @@ interface UserItem {
   createdAt: Date;
 }
 
-const ROLE_META: Record<string, { label: string; variant: "default" | "secondary" | "outline"; icon: React.ElementType; color: string }> = {
+const ROLE_META: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "outline"; icon: React.ElementType; color: string }
+> = {
   ADMIN: { label: "Admin", variant: "default", icon: Crown, color: "text-amber-400" },
   PM: { label: "PM", variant: "secondary", icon: ShieldCheck, color: "text-(--color-primary)" },
   MEMBER: { label: "Member", variant: "outline", icon: User, color: "text-(--color-text-muted)" }
@@ -38,7 +41,9 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-(--color-text)">Phân quyền</h1>
-          <p className="mt-1 text-sm text-(--color-text-muted)">Quản lý tài khoản và vai trò người dùng trong hệ thống</p>
+          <p className="mt-1 text-sm text-(--color-text-muted)">
+            Quản lý tài khoản và vai trò người dùng trong hệ thống
+          </p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />

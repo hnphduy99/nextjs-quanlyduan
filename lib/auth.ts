@@ -3,9 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "./db";
 import type { Role } from "@/app/generated/prisma/client";
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "fallback-secret-key",
-);
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET || "fallback-secret-key");
 const COOKIE_NAME = "crm-session";
 
 export interface SessionPayload {
@@ -22,9 +20,7 @@ export async function createToken(payload: SessionPayload): Promise<string> {
     .sign(SECRET);
 }
 
-export async function verifyToken(
-  token: string,
-): Promise<SessionPayload | null> {
+export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, SECRET);
     return payload as unknown as SessionPayload;
@@ -41,7 +37,7 @@ export async function setSessionCookie(payload: SessionPayload) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 ngày
-    path: "/",
+    path: "/"
   });
 }
 
@@ -62,8 +58,8 @@ export async function getCurrentUser() {
       id: true,
       email: true,
       name: true,
-      role: true,
-    },
+      role: true
+    }
   });
 
   return user;
@@ -77,7 +73,7 @@ export async function clearSession() {
 export function hasPermission(
   userRole: Role,
   action: "create" | "read" | "update" | "delete",
-  isOwner: boolean = false,
+  isOwner: boolean = false
 ): boolean {
   switch (action) {
     case "create":

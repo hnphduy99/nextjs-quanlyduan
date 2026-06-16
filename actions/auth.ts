@@ -1,14 +1,12 @@
 "use server";
 
+import { clearSession, getSession, setSessionCookie } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { logActivity } from "@/lib/audit-logger";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
-import { setSessionCookie, clearSession, getSession } from "@/lib/auth";
 
-export async function loginAction(
-  _prevState: { error?: string } | null,
-  formData: FormData,
-) {
+export async function loginAction(_prevState: { error?: string } | null, formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -30,13 +28,19 @@ export async function loginAction(
     userId: user.id,
     email: user.email,
     name: user.name,
-    role: user.role,
+    role: user.role
   });
+
+  await logActivity(user.id, "LOGIN", "Đăng nhập thành công");
 
   redirect("/projects");
 }
 
 export async function logoutAction() {
+  const session = await getSession();
+  if (session) {
+    await logActivity(session.userId, "LOGOUT", "Đăng xuất tài khoản");
+  }
   await clearSession();
   redirect("/login");
 }

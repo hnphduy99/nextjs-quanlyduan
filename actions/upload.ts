@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logActivity } from "@/lib/audit-logger";
 import { mkdir, writeFile } from "fs/promises";
 import { revalidatePath } from "next/cache";
 import path from "path";
@@ -49,7 +50,6 @@ export async function uploadProjectFile(formData: FormData) {
 
     // Tạo tên file unique
     const timestamp = Date.now();
-    const ext = path.extname(file.name);
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const uniqueName = `step${stepOrder}_${timestamp}_${safeName}`;
     const filePath = path.join(uploadDir, uniqueName);
@@ -73,6 +73,19 @@ export async function uploadProjectFile(formData: FormData) {
     });
 
     revalidatePath(`/projects/${projectId}`);
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true }
+    });
+
+    await logActivity(user.id, "UPLOAD_FILE", {
+      projectId,
+      projectName: project?.name,
+      fileName: file.name,
+      stepOrder
+    });
+
     return { success: true, filePath: publicPath };
   } catch (error) {
     console.error("Upload error:", error);
@@ -99,6 +112,19 @@ export async function deleteProjectFile(fileId: string, projectId: string) {
 
     await prisma.projectFile.delete({ where: { id: fileId } });
     revalidatePath(`/projects/${projectId}`);
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true }
+    });
+
+    await logActivity(user.id, "DELETE_FILE", {
+      projectId,
+      projectName: project?.name,
+      fileName: file.fileName,
+      fileId
+    });
+
     return { success: true };
   } catch {
     return { error: "Có lỗi xảy ra khi xóa file" };

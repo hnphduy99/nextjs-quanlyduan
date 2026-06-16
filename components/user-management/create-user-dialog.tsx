@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ROLE_OPTIONS } from "@/constants/options";
 import { Loader2, Plus, Shield } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -13,12 +14,6 @@ interface CreateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const ROLE_OPTIONS = [
-  { value: "ADMIN", label: "Admin", desc: "Toàn quyền quản trị" },
-  { value: "PM", label: "PM", desc: "Quản lý dự án" },
-  { value: "MEMBER", label: "Member", desc: "Nhân viên thực thi" }
-] as const;
 
 export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const [isPending, startTransition] = useTransition();
@@ -64,7 +59,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-(--color-primary)" />
+            <Shield className="text-primary h-5 w-5" />
             Thêm người dùng mới
           </DialogTitle>
           <DialogDescription>Tạo tài khoản và phân quyền truy cập hệ thống</DialogDescription>
@@ -73,14 +68,14 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="user-name">
-              Họ và tên <span className="text-(--color-destructive)">*</span>
+              Họ và tên <span className="text-destructive">*</span>
             </Label>
             <Input id="user-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nguyễn Văn A" />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="user-email">
-              Email <span className="text-(--color-destructive)">*</span>
+              Email <span className="text-destructive">*</span>
             </Label>
             <Input
               id="user-email"
@@ -93,7 +88,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
           <div className="space-y-1.5">
             <Label htmlFor="user-password">
-              Mật khẩu <span className="text-(--color-destructive)">*</span>
+              Mật khẩu <span className="text-destructive">*</span>
             </Label>
             <Input
               id="user-password"
@@ -114,11 +109,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                   onClick={() => setRole(opt.value)}
                   className={`rounded-lg border p-2.5 text-left transition-all ${
                     role === opt.value
-                      ? "border-(--color-primary) bg-primary/10"
-                      : "border-(--color-border) bg-(--color-surface) hover:border-(--color-primary)/50"
+                      ? "bg-primary/10 border-primary"
+                      : "hover:border-primary/50 border-(--color-border) bg-(--color-surface)"
                   }`}
                 >
-                  <p className={`text-xs font-bold ${role === opt.value ? "text-(--color-primary)" : "text-(--color-text)"}`}>
+                  <p className={`text-xs font-bold ${role === opt.value ? "text-primary" : "text-(--color-text)"}`}>
                     {opt.label}
                   </p>
                   <p className="mt-0.5 text-[10px] text-(--color-text-muted)">{opt.desc}</p>
@@ -134,14 +129,25 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           )}
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                resetForm();
+                onOpenChange(false);
+              }}
+            >
               Hủy
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Đang tạo...</>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Đang tạo...
+                </>
               ) : (
-                <><Plus className="h-4 w-4" /> Tạo người dùng</>
+                <>
+                  <Plus className="h-4 w-4" /> Tạo người dùng
+                </>
               )}
             </Button>
           </div>

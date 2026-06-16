@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { updateUser } from "@/actions/user";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ROLE_OPTIONS } from "@/constants/options";
 import { Loader2, Pencil } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -14,13 +16,6 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
   user: { id: string; name: string; email: string; role: "ADMIN" | "PM" | "MEMBER" };
 }
-
-const ROLE_OPTIONS = [
-  { value: "ADMIN", label: "Admin", desc: "Toàn quyền" },
-  { value: "PM", label: "PM", desc: "Quản lý" },
-  { value: "MEMBER", label: "Member", desc: "Nhân viên" }
-] as const;
-
 export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -105,11 +100,11 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
                   onClick={() => setRole(opt.value)}
                   className={`rounded-lg border p-2.5 text-left transition-all ${
                     role === opt.value
-                      ? "border-(--color-primary) bg-primary/10"
-                      : "border-(--color-border) bg-(--color-surface) hover:border-(--color-primary)/50"
+                      ? "bg-primary/10 border-primary"
+                      : "hover:border-primary/50 border-(--color-border) bg-(--color-surface)"
                   }`}
                 >
-                  <p className={`text-xs font-bold ${role === opt.value ? "text-(--color-primary)" : "text-(--color-text)"}`}>
+                  <p className={`text-xs font-bold ${role === opt.value ? "text-primary" : "text-(--color-text)"}`}>
                     {opt.label}
                   </p>
                   <p className="mt-0.5 text-[10px] text-(--color-text-muted)">{opt.desc}</p>
@@ -119,7 +114,7 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
           </div>
 
           {error && (
-            <div className="rounded-lg border border-(--color-destructive)/30 bg-(--color-destructive)/10 px-4 py-2.5 text-sm text-(--color-destructive)">
+            <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border px-4 py-2.5 text-sm">
               {error}
             </div>
           )}
@@ -130,9 +125,13 @@ export function EditUserDialog({ open, onOpenChange, user }: EditUserDialogProps
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Đang lưu...</>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Đang lưu...
+                </>
               ) : (
-                <><Pencil className="h-4 w-4" /> Lưu thay đổi</>
+                <>
+                  <Pencil className="h-4 w-4" /> Lưu thay đổi
+                </>
               )}
             </Button>
           </div>

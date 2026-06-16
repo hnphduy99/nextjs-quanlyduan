@@ -3,6 +3,7 @@
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { calcPercentageByStep, DEFAULT_STEPS } from "@/lib/project-constants";
+import { logActivity } from "@/lib/audit-logger";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -50,7 +51,7 @@ export async function createProject(data: CreateProjectInput) {
   try {
     const validated = CreateProjectSchema.parse(data);
 
-    await prisma.project.create({
+    const newProject = await prisma.project.create({
       data: {
         name: validated.name,
         description: validated.description,
@@ -79,6 +80,11 @@ export async function createProject(data: CreateProjectInput) {
           })
         }
       }
+    });
+
+    await logActivity(user.id, "CREATE_PROJECT", {
+      projectId: newProject.id,
+      projectName: newProject.name
     });
 
     revalidatePath("/projects");
@@ -154,6 +160,15 @@ export async function updateProjectProgress(data: {
       })
     ]);
 
+    await logActivity(user.id, "UPDATE_PROGRESS", {
+      projectId: project.id,
+      projectName: project.name,
+      oldStep: project.currentStepOrder,
+      newStep: validated.newStepOrder,
+      percentage: newPercentage,
+      note: validated.note
+    });
+
     revalidatePath(`/projects/${validated.projectId}`);
     revalidatePath("/projects");
     revalidatePath("/dashboard");
@@ -177,7 +192,18 @@ export async function deleteProject(projectId: string): Promise<{ error?: string
   }
 
   try {
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
+    });
+    if (!project) return { error: "Không tìm thấy dự án" };
+
     await prisma.project.delete({ where: { id: projectId } });
+
+    await logActivity(user.id, "DELETE_PROJECT", {
+      projectId: project.id,
+      projectName: project.name
+    });
+
     revalidatePath("/projects");
     revalidatePath("/dashboard");
     return { success: true };
