@@ -38,19 +38,19 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
   return (
     <div className="animate-in space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tight">Phân quyền</h1>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý tài khoản và vai trò người dùng trong hệ thống</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2">
+        <Button onClick={() => setCreateOpen(true)} className="w-full gap-2 self-start sm:w-auto sm:self-auto">
           <Plus className="h-4 w-4" />
           Thêm người dùng
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="stagger-children grid grid-cols-3 gap-4">
+      <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15">
@@ -103,49 +103,55 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
               return (
                 <div
                   key={u.id}
-                  className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-(--color-surface-elevated)"
+                  className="group flex flex-col justify-between gap-4 px-5 py-4 transition-colors hover:bg-(--color-surface-elevated) sm:flex-row sm:items-center"
                 >
-                  {/* Avatar */}
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-sm font-bold">
-                    {u.name.charAt(0).toUpperCase()}
-                  </div>
-
-                  {/* Info */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{u.name}</p>
-                      {isSelf && (
-                        <Badge variant="outline" className="text-[10px]">
-                          (bạn)
-                        </Badge>
-                      )}
+                  {/* Left part: Avatar + Info */}
+                  <div className="flex w-full min-w-0 items-center gap-4 sm:w-auto">
+                    {/* Avatar */}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-sm font-bold">
+                      {u.name.charAt(0).toUpperCase()}
                     </div>
-                    <p className="text-muted-foreground text-xs">{u.email}</p>
+
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold">{u.name}</p>
+                        {isSelf && (
+                          <Badge variant="outline" className="shrink-0 text-[10px]">
+                            (bạn)
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground truncate text-xs">{u.email}</p>
+                    </div>
                   </div>
 
-                  {/* Role */}
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <RoleIcon className={`h-3.5 w-3.5 ${meta.color}`} />
-                    <Badge variant={meta.variant} className="text-xs">
-                      {meta.label}
-                    </Badge>
-                  </div>
+                  {/* Right part: Role, Date, Actions */}
+                  <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
+                    {/* Role */}
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <RoleIcon className={`h-3.5 w-3.5 ${meta.color}`} />
+                      <Badge variant={meta.variant} className="text-xs">
+                        {meta.label}
+                      </Badge>
+                    </div>
 
-                  {/* Date */}
-                  <p className="text-muted-foreground hidden text-xs sm:block">{formatDate(u.createdAt)}</p>
+                    {/* Date */}
+                    <p className="text-muted-foreground text-xs sm:block">{formatDate(u.createdAt)}</p>
 
-                  {/* Actions */}
-                  <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditUser(u)}
-                      className="h-8 gap-1.5 text-xs hover:bg-(--color-surface-elevated)"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Sửa
-                    </Button>
-                    {!isSelf && <DeleteUserButton userId={u.id} userName={u.name} />}
+                    {/* Actions: Always visible on touch viewports (max-md), hover-based on desktop */}
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 max-md:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditUser(u)}
+                        className="h-8 gap-1.5 text-xs hover:bg-(--color-surface-elevated)"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Sửa
+                      </Button>
+                      {!isSelf && <DeleteUserButton userId={u.id} userName={u.name} />}
+                    </div>
                   </div>
                 </div>
               );

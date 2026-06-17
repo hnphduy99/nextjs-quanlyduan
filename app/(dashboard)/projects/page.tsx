@@ -74,11 +74,11 @@ export default async function ProjectsPage() {
           {projects.map((project) => {
             const currentStep = project.steps.find((s) => s.stepOrder === project.currentStepOrder);
             return (
-              <Card key={project.id} className="group hover:border-primary/30 mx-2 transition-all duration-300">
+              <Card key={project.id} className="group hover:border-primary/30 mx-0 transition-all duration-300 sm:mx-2">
                 <CardContent className="p-5">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                     <div className="min-w-0 flex-1">
-                      <div className="mb-2 flex items-center gap-3">
+                      <div className="mb-2 flex flex-wrap items-center gap-3">
                         <Link
                           href={`/projects/${project.id}`}
                           className="hover:text-primary truncate text-lg font-semibold transition-colors"
@@ -114,7 +114,7 @@ export default async function ProjectsPage() {
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
                       <Link href={`/projects/${project.id}`}>
                         <Badge
                           variant="outline"

@@ -133,14 +133,14 @@ export default async function DashboardPage({
   return (
     <div className="animate-in space-y-6">
       {/* ── HEADER ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tight">Tổng quan</h1>
           <p className="text-muted-foreground mt-1 text-sm">Theo dõi tiến độ và hoạt động của toàn bộ hệ thống</p>
         </div>
         <Link
           href="/projects"
-          className="hover:text-primary-foreground text-primary flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+          className="hover:text-primary-foreground text-primary inline-flex items-center gap-2 self-start rounded-lg px-3 py-2 transition-colors sm:self-auto"
         >
           <FolderKanban className="h-4 w-4" />
           Xem tất cả dự án
@@ -152,7 +152,7 @@ export default async function DashboardPage({
       {isManager && <DashboardFilters allUsers={allUsers} currentFilters={params} />}
 
       {/* ── KPI CARDS ── */}
-      <div className="stagger-children grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="Tổng dự án"
           value={kpis.totalProjects}
@@ -199,7 +199,7 @@ export default async function DashboardPage({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:grid-cols-4">
             {[1, 2, 3, 4].map((stepOrder) => {
               const dist = stepDistribution.find((d) => d.currentStepOrder === stepOrder);
               const count = dist?._count.id ?? 0;
@@ -220,8 +220,8 @@ export default async function DashboardPage({
       </Card>
 
       {/* ── MAIN BODY ── */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-6">
-        <div className="space-y-6 xl:col-span-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-6">
           {/* Project Progress List — sorted by step (high first) */}
           <Card>
             <CardHeader className="border-border border-b p-3">
@@ -316,7 +316,7 @@ export default async function DashboardPage({
           </Card>
         </div>
 
-        <div className="space-y-6 xl:col-span-2">
+        <div className="space-y-6">
           {/* Overdue Projects */}
           <Card className="border-rose-500/30">
             <CardHeader className="border-b border-rose-500/20 bg-rose-500/5 p-3">
@@ -372,7 +372,7 @@ export default async function DashboardPage({
           </Card>
         </div>
 
-        <div className="space-y-6 xl:col-span-2">
+        <div className="space-y-6">
           <Card>
             <CardHeader className="border-border border-b p-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">

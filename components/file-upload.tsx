@@ -160,7 +160,7 @@ export function FileUpload({ projectId, stepOrder, existingFiles = [] }: FileUpl
                 <p className="truncate text-sm font-medium">{file.fileName}</p>
                 <p className="text-muted-foreground text-xs">{formatFileSize(file.fileSize)}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 max-md:opacity-100">
                 <a
                   href={file.filePath}
                   target="_blank"

@@ -258,17 +258,21 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="mt-4 flex flex-col-reverse justify-end gap-2 sm:flex-row">
             <Button
               variant="outline"
               onClick={handleResetFilters}
               disabled={isPending}
-              className="h-9 cursor-pointer gap-2 text-xs"
+              className="h-9 w-full cursor-pointer gap-2 text-xs sm:w-auto"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isPending ? "animate-spin" : ""}`} />
               Làm mới
             </Button>
-            <Button onClick={handleApplyFilters} disabled={isPending} className="h-9 cursor-pointer gap-2 text-xs">
+            <Button
+              onClick={handleApplyFilters}
+              disabled={isPending}
+              className="h-9 w-full cursor-pointer gap-2 text-xs sm:w-auto"
+            >
               <Filter className="h-3.5 w-3.5" />
               Lọc dữ liệu
             </Button>
@@ -286,7 +290,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-sm">
+            <table className="w-full min-w-200 border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-muted/40 text-muted-foreground border-border border-b font-semibold">
                   <th className="px-5 py-3.5 text-xs tracking-wider uppercase">Thời gian</th>

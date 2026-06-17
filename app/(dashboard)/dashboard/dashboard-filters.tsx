@@ -44,14 +44,14 @@ export function DashboardFilters({ allUsers, currentFilters }: DashboardFiltersP
   };
 
   return (
-    <div className="border-border flex flex-wrap items-end gap-3 rounded-xl border bg-(--color-surface) p-3">
+    <div className="border-border flex flex-col gap-3 rounded-xl border bg-(--color-surface) p-3 sm:flex-row sm:items-end">
       {/* Lọc theo nhân sự */}
-      <div className="flex flex-col gap-1">
+      <div className="flex w-full flex-col gap-1 sm:w-auto sm:min-w-40">
         <label className="text-muted-foreground text-xs">Nhân sự</label>
         <select
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-          className="border-input bg-background focus:ring-primary h-8 rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+          className="border-input bg-background focus:ring-primary h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
         >
           <option value="">Tất cả</option>
           {allUsers.map((u) => (
@@ -63,31 +63,31 @@ export function DashboardFilters({ allUsers, currentFilters }: DashboardFiltersP
       </div>
 
       {/* Lọc theo ngày */}
-      <div className="flex flex-col gap-1">
+      <div className="flex w-full flex-col gap-1 sm:w-auto">
         <label className="text-muted-foreground text-xs">Từ ngày</label>
         <input
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="border-input bg-background focus:ring-primary h-8 rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+          className="border-input bg-background focus:ring-primary h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex w-full flex-col gap-1 sm:w-auto">
         <label className="text-muted-foreground text-xs">Đến ngày</label>
         <input
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="border-input bg-background focus:ring-primary h-8 rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
+          className="border-input bg-background focus:ring-primary h-8 w-full rounded-md border px-2 text-xs focus:ring-1 focus:outline-none"
         />
       </div>
 
-      <div className="flex gap-2">
-        <Button size="sm" onClick={applyFilters} className="h-8 text-xs">
+      <div className="mt-2 flex w-full justify-end gap-2 sm:mt-0 sm:w-auto">
+        <Button size="sm" onClick={applyFilters} className="h-8 w-full text-xs sm:w-auto">
           Áp dụng
         </Button>
         {hasFilters && (
-          <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-xs">
+          <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 w-full text-xs sm:w-auto">
             <RotateCcw className="mr-1 h-3 w-3" />
             Reset
           </Button>

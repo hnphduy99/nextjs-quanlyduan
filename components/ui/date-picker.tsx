@@ -18,9 +18,10 @@ export const title = "Date Picker with Month and Year Selector";
 interface DatePickerProps {
   value?: Date; // Hoặc Date | undefined
   onChange: (date: Date | undefined) => void;
+  className?: string;
 }
 
-const DatePicker = ({ value, onChange }: DatePickerProps) => {
+const DatePicker = ({ value, onChange, className }: DatePickerProps) => {
   const [month, setMonth] = useState<Date>(new Date());
 
   const handleCalendarChange = (value: string | number, event: ChangeEventHandler<HTMLSelectElement>) => {
@@ -36,7 +37,7 @@ const DatePicker = ({ value, onChange }: DatePickerProps) => {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          className={cn("w-70 justify-start text-left font-normal", !value && "text-muted-foreground")}
+          className={cn("w-full justify-start text-left font-normal", !value && "text-muted-foreground", className)}
           variant="outline"
         >
           <CalendarIcon className="mr-2 h-4 w-4" />

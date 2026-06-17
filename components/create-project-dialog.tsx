@@ -189,7 +189,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Tạo dự án mới</DialogTitle>
           <DialogDescription>Nhập đầy đủ thông tin để tạo dự án và 4 bước triển khai tự động</DialogDescription>
@@ -403,9 +403,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                       <div className="bg-primary/15 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-(--color-primary)">
                         {step.stepOrder}
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-(--color-text)">{step.stepName}</p>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
+                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="space-y-1">
                             <Label className="text-muted-foreground text-xs">
                               Bắt đầu <span className="text-(--color-destructive)">*</span>
