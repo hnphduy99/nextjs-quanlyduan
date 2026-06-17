@@ -1,5 +1,6 @@
 "use server";
 
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { logActivity } from "@/lib/audit-logger";
@@ -22,15 +23,45 @@ const UpdateUserSchema = z.object({
   password: z.string().optional()
 });
 
-export async function getUsers() {
+export async function getUsers(options?: { page?: number; limit?: number }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.role !== "ADMIN") return [];
+  if (user.role !== "ADMIN") {
+    return {
+      users: [],
+      totalCount: 0,
+      adminCount: 0,
+      pmCount: 0,
+      memberCount: 0,
+      hasMore: false
+    };
+  }
 
-  return prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
-    orderBy: { createdAt: "desc" }
-  });
+  const page = options?.page ?? 1;
+  const limit = options?.limit ?? PAGINATION_CONFIG.DEFAULT_LIMIT;
+  const skip = (page - 1) * limit;
+
+  const [users, totalCount, adminCount, pmCount, memberCount] = await Promise.all([
+    prisma.user.findMany({
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit
+    }),
+    prisma.user.count(),
+    prisma.user.count({ where: { role: "ADMIN" } }),
+    prisma.user.count({ where: { role: "PM" } }),
+    prisma.user.count({ where: { role: "MEMBER" } })
+  ]);
+
+  return {
+    users,
+    totalCount,
+    adminCount,
+    pmCount,
+    memberCount,
+    hasMore: skip + users.length < totalCount
+  };
 }
 
 export async function createUser(_prevState: { error?: string; success?: boolean } | null, formData: FormData) {

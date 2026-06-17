@@ -5,7 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ACTION_META } from "@/constants/logs";
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { formatDate } from "@/lib/utils";
 import { Activity, Calendar, Filter, Globe, Monitor, RefreshCw, Search } from "lucide-react";
 import { useState, useTransition } from "react";
@@ -33,27 +37,19 @@ interface UserDropdownItem {
 }
 
 interface LogsPageClientProps {
-  initialLogs: LogItem[];
+  initialLogs: {
+    logs: LogItem[];
+    totalCount: number;
+    hasMore: boolean;
+  };
   users: UserDropdownItem[];
   actions: string[];
   currentUserId: string;
 }
 
-const ACTION_META: Record<string, { label: string; color: string }> = {
-  CREATE_PROJECT: { label: "Tạo dự án", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  UPDATE_PROGRESS: { label: "Tiến độ dự án", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  DELETE_PROJECT: { label: "Xóa dự án", color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
-  LOGIN: { label: "Đăng nhập", color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
-  LOGOUT: { label: "Đăng xuất", color: "bg-slate-500/10 text-slate-500 border-slate-500/20" },
-  UPLOAD_FILE: { label: "Tải file lên", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-  DELETE_FILE: { label: "Xóa file", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
-  CREATE_USER: { label: "Tạo người dùng", color: "bg-teal-500/10 text-teal-500 border-teal-500/20" },
-  UPDATE_USER: { label: "Sửa người dùng", color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20" },
-  DELETE_USER: { label: "Xóa người dùng", color: "bg-red-500/10 text-red-500 border-red-500/20" }
-};
-
 export function LogsPageClient({ initialLogs, users, actions, currentUserId }: LogsPageClientProps) {
-  const [logs, setLogs] = useState<LogItem[]>(initialLogs);
+  const [logsData, setLogsData] = useState(initialLogs);
+  const [page, setPage] = useState(1);
   const [isPending, startTransition] = useTransition();
 
   // Filters State
@@ -63,20 +59,27 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const fetchLogs = async (targetPage: number) => {
+    try {
+      const result = await getActivityLogs({
+        userId: selectedUser === "all" ? undefined : selectedUser,
+        action: selectedAction === "all" ? undefined : selectedAction,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        search: search.trim() || undefined,
+        page: targetPage,
+        limit: PAGINATION_CONFIG.DEFAULT_LIMIT
+      });
+      setLogsData(result);
+    } catch (error) {
+      console.error("Lỗi khi tải nhật ký hoạt động:", error);
+    }
+  };
+
   const handleApplyFilters = () => {
+    setPage(1);
     startTransition(async () => {
-      try {
-        const result = await getActivityLogs({
-          userId: selectedUser === "all" ? undefined : selectedUser,
-          action: selectedAction === "all" ? undefined : selectedAction,
-          dateFrom: dateFrom || undefined,
-          dateTo: dateTo || undefined,
-          search: search.trim() || undefined
-        });
-        setLogs(result as LogItem[]);
-      } catch (error) {
-        console.error("Lỗi khi tải nhật ký hoạt động:", error);
-      }
+      await fetchLogs(1);
     });
   };
 
@@ -86,16 +89,26 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
     setSelectedAction("all");
     setDateFrom("");
     setDateTo("");
+    setPage(1);
 
     startTransition(async () => {
       try {
-        const result = await getActivityLogs();
-        setLogs(result as LogItem[]);
+        const result = await getActivityLogs({ page: 1, limit: PAGINATION_CONFIG.DEFAULT_LIMIT });
+        setLogsData(result);
       } catch (error) {
         console.error("Lỗi khi reset nhật ký hoạt động:", error);
       }
     });
   };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    startTransition(async () => {
+      await fetchLogs(newPage);
+    });
+  };
+
+  const totalPages = Math.ceil(logsData.totalCount / PAGINATION_CONFIG.DEFAULT_LIMIT);
 
   const formatLogDetails = (action: string, detailsStr: string | null) => {
     if (!detailsStr) return <span className="text-muted-foreground text-xs">—</span>;
@@ -285,7 +298,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
         <CardHeader className="border-border border-b p-4">
           <CardTitle className="flex items-center gap-2 text-base font-bold">
             <Activity className="text-primary h-4.5 w-4.5" />
-            Danh sách nhật ký hoạt động ({logs.length})
+            Danh sách nhật ký hoạt động ({logsData.totalCount})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -301,90 +314,146 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
                 </tr>
               </thead>
               <tbody className="divide-y divide-(--color-border)">
-                {logs.map((log) => {
-                  const meta = ACTION_META[log.action] || {
-                    label: log.action,
-                    color: "bg-slate-500/10 text-slate-500 border-slate-500/20"
-                  };
-                  const isSelf = log.userId === currentUserId;
-                  return (
-                    <tr key={log.id} className="group transition-colors hover:bg-(--color-surface-elevated)">
-                      {/* Time */}
-                      <td className="text-muted-foreground px-5 py-4 text-xs whitespace-nowrap">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {formatDate(log.createdAt)}
-                        </span>
-                      </td>
-
-                      {/* User */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-xs font-bold">
-                            {log.user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-semibold">{log.user.name}</span>
-                              {isSelf && (
-                                <Badge variant="outline" className="h-4 px-1 py-0 text-[9px]">
-                                  bạn
-                                </Badge>
-                              )}
+                {isPending ? (
+                  // Skeleton rows when transitioning pages/filters
+                  Array.from({ length: Math.min(logsData.logs.length || 5, PAGINATION_CONFIG.DEFAULT_LIMIT) }).map(
+                    (_, idx) => (
+                      <tr key={`skeleton-${idx}`} className="border-border border-b">
+                        <td className="px-5 py-4">
+                          <Skeleton className="h-4 w-24" />
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2.5">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <div className="space-y-1">
+                              <Skeleton className="h-3 w-20" />
+                              <Skeleton className="h-2.5 w-28" />
                             </div>
-                            <span className="text-muted-foreground block text-[10px]">{log.user.email}</span>
                           </div>
-                        </div>
-                      </td>
-
-                      {/* Action */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <Badge variant="outline" className={`border px-2 py-0.5 text-xs ${meta.color}`}>
-                          {meta.label}
-                        </Badge>
-                      </td>
-
-                      {/* Details */}
-                      <td className="min-w-70 px-5 py-4">{formatLogDetails(log.action, log.details)}</td>
-
-                      {/* IP and Device */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="text-muted-foreground space-y-1 text-[11px]">
-                          <span className="flex items-center gap-1">
-                            <Globe className="h-3.5 w-3.5 shrink-0" />
-                            {log.ipAddress || "Không rõ IP"}
-                          </span>
-                          <span
-                            className="flex max-w-37.5 items-center gap-1 truncate"
-                            title={log.userAgent || undefined}
-                          >
-                            <Monitor className="h-3.5 w-3.5 shrink-0" />
-                            {log.userAgent
-                              ? log.userAgent.includes("Windows")
-                                ? "Windows"
-                                : log.userAgent.includes("Macintosh")
-                                  ? "macOS"
-                                  : log.userAgent.includes("Linux")
-                                    ? "Linux"
-                                    : "Thiết bị di động"
-                              : "Không rõ"}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                {logs.length === 0 && (
+                        </td>
+                        <td className="px-5 py-4">
+                          <Skeleton className="h-5 w-20 rounded-md" />
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="space-y-2">
+                            <Skeleton className="h-3 w-48" />
+                            <Skeleton className="h-2.5 w-32" />
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="space-y-1">
+                            <Skeleton className="h-3.5 w-24" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : logsData.logs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-muted-foreground py-16 text-center text-sm">
                       Không tìm thấy lịch sử hoạt động nào khớp với bộ lọc
                     </td>
                   </tr>
+                ) : (
+                  logsData.logs.map((log) => {
+                    const meta = ACTION_META[log.action] || {
+                      label: log.action,
+                      color: "bg-slate-500/10 text-slate-500 border-slate-500/20"
+                    };
+                    const isSelf = log.userId === currentUserId;
+                    return (
+                      <tr
+                        key={log.id}
+                        className="group animate-in transition-colors hover:bg-(--color-surface-elevated)"
+                      >
+                        {/* Time */}
+                        <td className="text-muted-foreground px-5 py-4 text-xs whitespace-nowrap">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {formatDate(log.createdAt)}
+                          </span>
+                        </td>
+
+                        {/* User */}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-xs font-bold">
+                              {log.user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs font-semibold">{log.user.name}</span>
+                                {isSelf && (
+                                  <Badge variant="outline" className="h-4 px-1 py-0 text-[9px]">
+                                    bạn
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-muted-foreground block text-[10px]">{log.user.email}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <Badge variant="outline" className={`border px-2 py-0.5 text-xs ${meta.color}`}>
+                            {meta.label}
+                          </Badge>
+                        </td>
+
+                        {/* Details */}
+                        <td className="min-w-70 px-5 py-4">{formatLogDetails(log.action, log.details)}</td>
+
+                        {/* IP and Device */}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <div className="text-muted-foreground space-y-1 text-[11px]">
+                            <span className="flex items-center gap-1">
+                              <Globe className="h-3.5 w-3.5 shrink-0" />
+                              {log.ipAddress || "Không rõ IP"}
+                            </span>
+                            <span
+                              className="flex max-w-37.5 items-center gap-1 truncate"
+                              title={log.userAgent || undefined}
+                            >
+                              <Monitor className="h-3.5 w-3.5 shrink-0" />
+                              {log.userAgent
+                                ? log.userAgent.includes("Windows")
+                                  ? "Windows"
+                                  : log.userAgent.includes("Macintosh")
+                                    ? "macOS"
+                                    : log.userAgent.includes("Linux")
+                                      ? "Linux"
+                                      : "Thiết bị di động"
+                                : "Không rõ"}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination info and buttons */}
+          {totalPages > 1 && (
+            <div className="border-border flex flex-col items-center justify-between gap-4 border-t px-5 py-4 sm:flex-row">
+              <p className="text-muted-foreground text-xs">
+                Hiển thị{" "}
+                <span className="font-semibold">
+                  {Math.min((page - 1) * PAGINATION_CONFIG.DEFAULT_LIMIT + 1, logsData.totalCount)}
+                </span>{" "}
+                -{" "}
+                <span className="font-semibold">
+                  {Math.min(page * PAGINATION_CONFIG.DEFAULT_LIMIT, logsData.totalCount)}
+                </span>{" "}
+                trong tổng số <span className="font-semibold">{logsData.totalCount}</span> hoạt động
+              </p>
+              <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} className="py-0" />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

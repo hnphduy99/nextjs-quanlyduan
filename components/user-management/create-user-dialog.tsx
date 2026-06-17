@@ -123,7 +123,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           </div>
 
           {error && (
-            <div className="rounded-lg border border-(--color-destructive)/30 bg-(--color-destructive)/10 px-4 py-2.5 text-sm text-(--color-destructive)">
+            <div className="bg-destructive/10 rounded-lg border border-(--color-destructive)/30 px-4 py-2.5 text-sm text-(--color-destructive)">
               {error}
             </div>
           )}

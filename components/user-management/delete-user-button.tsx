@@ -32,7 +32,7 @@ export function DeleteUserButton({ userId, userName }: { userId: string; userNam
       size="sm"
       onClick={handleDelete}
       disabled={isPending}
-      className={`h-8 transition-colors ${confirm ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30" : "hover:bg-(--color-destructive)/10 hover:text-(--color-destructive)"}`}
+      className={`h-8 transition-colors ${confirm ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30" : "hover:bg-destructive/10 hover:text-(--color-destructive)"}`}
     >
       {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
       <span className="ml-1.5 text-xs">{confirm ? "Xác nhận?" : "Xóa"}</span>

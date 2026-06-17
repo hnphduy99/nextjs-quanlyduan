@@ -1,5 +1,6 @@
 "use server";
 
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { logActivity } from "@/lib/audit-logger";
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -215,21 +216,40 @@ export async function deleteProject(projectId: string): Promise<{ error?: string
 /**
  * Lấy danh sách dự án theo quyền
  */
-export async function getProjects() {
+export async function getProjects(options?: { page?: number; limit?: number }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  const page = options?.page ?? 1;
+  const limit = options?.limit ?? PAGINATION_CONFIG.DEFAULT_LIMIT;
+  const skip = (page - 1) * limit;
+
   const where = user.role === "ADMIN" || user.role === "PM" ? {} : { createdById: user.id };
 
-  return prisma.project.findMany({
-    where,
-    include: {
-      steps: { orderBy: { stepOrder: "asc" } },
-      createdBy: { select: { id: true, name: true, email: true, role: true } },
-      _count: { select: { logs: true, files: true } }
-    },
-    orderBy: [{ createdAt: "desc" }]
-  });
+  const [projects, totalCount, completedCount, inProgressCount] = await Promise.all([
+    prisma.project.findMany({
+      where,
+      include: {
+        steps: { orderBy: { stepOrder: "asc" } },
+        createdBy: { select: { id: true, name: true, email: true, role: true } },
+        _count: { select: { logs: true, files: true } }
+      },
+      orderBy: [{ createdAt: "desc" }],
+      skip,
+      take: limit
+    }),
+    prisma.project.count({ where }),
+    prisma.project.count({ where: { ...where, percentage: 100 } }),
+    prisma.project.count({ where: { ...where, percentage: { gt: 0, lt: 100 } } })
+  ]);
+
+  return {
+    projects,
+    totalCount,
+    completedCount,
+    inProgressCount,
+    hasMore: skip + projects.length < totalCount
+  };
 }
 
 /**

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CATEGORY_OPTIONS, DEPLOYMENT_OPTIONS } from "@/constants/project";
 import { DEFAULT_STEPS } from "@/lib/project-constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -27,17 +28,6 @@ interface StepDate {
   startDate: Date | undefined;
   endDate: Date | undefined;
 }
-
-const CATEGORY_OPTIONS = [
-  { value: "GPS_AN_NINH", label: "GPS An ninh" },
-  { value: "KHCP_DN", label: "Dự án KHCP/DN" },
-  { value: "GIAO_TIEP_CAN", label: "Giao tiếp cận" }
-] as const;
-
-const DEPLOYMENT_OPTIONS = [
-  { value: "MUA", label: "Mua" },
-  { value: "THUE", label: "Thuê" }
-] as const;
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên dự án không được trống"),
@@ -384,7 +374,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/20 text-xs text-sky-500">
                   4
                 </span>
-                Các bước triển khai (4 bước cố định)
+                Các bước triển khai
               </h3>
             </div>
 

@@ -2,6 +2,7 @@ import { getProjectById } from "@/actions/project";
 import { ProgressUpdateForm } from "@/components/progress-update-form";
 import { ProjectLogTable } from "@/components/project-log-table";
 import { StepTimeline } from "@/components/step-timeline";
+import { CATEGORY_LABELS, DEPLOYMENT_LABELS } from "@/constants/project";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -24,17 +25,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  GPS_AN_NINH: "GPS An ninh",
-  KHCP_DN: "Dự án KHCP/DN",
-  GIAO_TIEP_CAN: "Giao tiếp cận"
-};
-
-const DEPLOYMENT_LABELS: Record<string, string> = {
-  MUA: "Mua",
-  THUE: "Thuê"
-};
 
 export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;

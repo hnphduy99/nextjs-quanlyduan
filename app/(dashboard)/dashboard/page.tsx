@@ -1,4 +1,5 @@
 import { getDashboardStats } from "@/actions/project";
+import { STEP_NAMES, STEP_COLORS } from "@/constants/project";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
@@ -21,20 +22,6 @@ import { DashboardFilters } from "./dashboard-filters";
 export const metadata = {
   title: "Dashboard — CRM Dynamic",
   description: "Tổng quan hệ thống quản lý dự án"
-};
-
-const STEP_NAMES: Record<number, string> = {
-  1: "Tiếp cận KH",
-  2: "Đề xuất giải pháp",
-  3: "Tham gia thầu",
-  4: "Triển khai"
-};
-
-const STEP_COLORS: Record<number, { bg: string; text: string; dot: string }> = {
-  1: { bg: "bg-sky-500/15", text: "text-sky-400", dot: "bg-sky-400" },
-  2: { bg: "bg-amber-500/15", text: "text-amber-400", dot: "bg-amber-400" },
-  3: { bg: "bg-rose-500/15", text: "text-rose-400", dot: "bg-rose-400" },
-  4: { bg: "bg-emerald-500/15", text: "text-emerald-400", dot: "bg-emerald-400" }
 };
 
 function StatCard({

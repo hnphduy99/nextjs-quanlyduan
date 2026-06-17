@@ -1,5 +1,6 @@
 "use server";
 
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -10,6 +11,8 @@ export interface LogFilterInput {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export async function getActivityLogs(filters?: LogFilterInput) {
@@ -47,22 +50,37 @@ export async function getActivityLogs(filters?: LogFilterInput) {
     ];
   }
 
-  return prisma.activityLog.findMany({
-    where,
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? PAGINATION_CONFIG.DEFAULT_LIMIT;
+  const skip = (page - 1) * limit;
+
+  const [logs, totalCount] = await Promise.all([
+    prisma.activityLog.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
         }
-      }
-    },
-    orderBy: {
-      createdAt: "desc"
-    }
-  });
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      skip,
+      take: limit
+    }),
+    prisma.activityLog.count({ where })
+  ]);
+
+  return {
+    logs,
+    totalCount,
+    hasMore: skip + logs.length < totalCount
+  };
 }
 
 export async function getActivityActions() {

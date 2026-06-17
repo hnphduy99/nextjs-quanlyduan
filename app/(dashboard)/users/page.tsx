@@ -1,4 +1,5 @@
 import { getUsers } from "@/actions/user";
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UsersPageClient } from "./users-client";
@@ -13,7 +14,7 @@ export default async function UsersPage() {
   if (!currentUser) redirect("/login");
   if (currentUser.role !== "ADMIN") redirect("/dashboard");
 
-  const users = await getUsers();
+  const initialData = await getUsers({ page: 1, limit: PAGINATION_CONFIG.DEFAULT_LIMIT });
 
-  return <UsersPageClient users={users} currentUserId={currentUser.id} />;
+  return <UsersPageClient initialData={initialData} currentUserId={currentUser.id} />;
 }

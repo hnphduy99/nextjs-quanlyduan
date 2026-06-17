@@ -1,5 +1,6 @@
 import { getActivityActions, getActivityLogs } from "@/actions/log";
 import { getUsers } from "@/actions/user";
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LogsPageClient } from "./logs-client";
@@ -14,14 +15,19 @@ export default async function LogsPage() {
   if (!currentUser) redirect("/login");
   if (currentUser.role !== "ADMIN") redirect("/dashboard");
 
-  const [users, initialLogs, actions] = await Promise.all([getUsers(), getActivityLogs(), getActivityActions()]);
+  const [usersData, initialLogsData, actions] = await Promise.all([
+    getUsers({ limit: 1000 }),
+    getActivityLogs({ page: 1, limit: PAGINATION_CONFIG.DEFAULT_LIMIT }),
+    getActivityActions()
+  ]);
 
-  // Map users to clean list of user info (id, name, email)
-  const userList = users.map((u) => ({
+  const userList = usersData.users.map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email
   }));
 
-  return <LogsPageClient initialLogs={initialLogs} users={userList} actions={actions} currentUserId={currentUser.id} />;
+  return (
+    <LogsPageClient initialLogs={initialLogsData} users={userList} actions={actions} currentUserId={currentUser.id} />
+  );
 }
