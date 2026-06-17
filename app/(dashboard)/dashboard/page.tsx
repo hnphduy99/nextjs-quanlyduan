@@ -1,7 +1,6 @@
 import { getDashboardStats } from "@/actions/project";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { formatDate } from "@/lib/utils";
 import {
   Activity,
@@ -277,9 +276,9 @@ export default async function DashboardPage({
                       href={`/projects/${p.id}`}
                       className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-(--color-surface-elevated)"
                     >
-                      <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                      {/* <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
                         <FolderKanban className="text-primary h-3.5 w-3.5" />
-                      </div>
+                      </div> */}
                       <div className="min-w-0 flex-1">
                         <p className="group-hover:text-primary truncate text-sm font-semibold transition-colors">
                           {p.name}
@@ -291,16 +290,17 @@ export default async function DashboardPage({
                             <>
                               <span className="mx-1">·</span>
                               <span>
-                                Bước {currentStep.stepOrder}: {currentStep.stepName}
+                                Bước {currentStep.stepOrder}
+                                {/* : {currentStep.stepName} */}
                               </span>
                             </>
                           )}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
-                        <div className="w-16">
+                        {/* <div className="w-16">
                           <Progress value={p.percentage} />
-                        </div>
+                        </div> */}
                         <Badge variant={p.percentage === 100 ? "success" : "secondary"} className="text-xs">
                           {p.percentage}%
                         </Badge>
@@ -339,9 +339,9 @@ export default async function DashboardPage({
                         href={`/projects/${p.id}`}
                         className="group flex items-center gap-4 rounded-xl px-5 py-3.5 transition-colors hover:bg-(--color-surface-elevated)"
                       >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15">
+                        {/* <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15">
                           <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
-                        </div>
+                        </div> */}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold transition-colors group-hover:text-rose-400">
                             {p.name}
@@ -354,7 +354,7 @@ export default async function DashboardPage({
                                 <span className="mx-1">·</span>
                                 <span className="text-rose-400">
                                   Bước {currentStep.stepOrder}: hạn{" "}
-                                  {currentStep.endDate ? formatDate(currentStep.endDate) : "N/A"}
+                                  {currentStep.endDate ? formatDate(currentStep.endDate).split(" ")[1] : "N/A"}
                                 </span>
                               </>
                             )}
