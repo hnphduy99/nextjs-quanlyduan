@@ -1,8 +1,8 @@
 "use server";
 
+import { logActivity } from "@/lib/audit-logger";
 import { clearSession, getSession, setSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { logActivity } from "@/lib/audit-logger";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 
@@ -33,7 +33,7 @@ export async function loginAction(_prevState: { error?: string } | null, formDat
 
   await logActivity(user.id, "LOGIN", "Đăng nhập thành công");
 
-  redirect("/projects");
+  redirect("/dashboard");
 }
 
 export async function logoutAction() {

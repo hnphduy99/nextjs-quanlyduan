@@ -64,7 +64,7 @@ export function DashboardFilters({ allUsers, currentFilters }: DashboardFiltersP
 
       {/* Lọc theo ngày */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-(--color-text-muted)">Từ ngày</label>
+        <label className="text-muted-foreground text-xs">Từ ngày</label>
         <input
           type="date"
           value={dateFrom}
@@ -73,7 +73,7 @@ export function DashboardFilters({ allUsers, currentFilters }: DashboardFiltersP
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-(--color-text-muted)">Đến ngày</label>
+        <label className="text-muted-foreground text-xs">Đến ngày</label>
         <input
           type="date"
           value={dateTo}

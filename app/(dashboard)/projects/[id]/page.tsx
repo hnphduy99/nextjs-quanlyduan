@@ -96,7 +96,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
           {project.expectedCompletionDate && (
             <span className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
-              Nghiệm thu: {formatDate(project.expectedCompletionDate)}
+              Nghiệm thu: {formatDate(project.expectedCompletionDate).split(" ")[1]}
             </span>
           )}
         </div>
@@ -132,7 +132,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             {project.expectedRevenue && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-(--color-text-muted)">
                 <CircleDollarSign className="h-3.5 w-3.5" />
-                <span>{project.expectedRevenue.toLocaleString("vi-VN")} trđ</span>
+                <span>{project.expectedRevenue.toLocaleString("vi-VN")} triệu đồng</span>
               </div>
             )}
           </CardContent>
@@ -162,9 +162,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             {project.feasibilityScore !== null && project.feasibilityScore !== undefined ? (
               <>
                 <p className="text-primary text-2xl font-black">{project.feasibilityScore}%</p>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-(--color-border)">
+                {/* <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-(--color-border)">
                   <div className="bg-primary h-full rounded-full" style={{ width: `${project.feasibilityScore}%` }} />
-                </div>
+                </div> */}
               </>
             ) : (
               <p className="text-sm text-(--color-text-muted)">Chưa đánh giá</p>

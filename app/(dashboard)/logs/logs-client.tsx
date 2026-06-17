@@ -104,14 +104,13 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
       const details = JSON.parse(detailsStr);
 
       if (typeof details === "string") {
-        return <span className="text-xs text-(--color-text)">{details}</span>;
+        return <span className="text-xs">{details}</span>;
       }
 
       if (action === "CREATE_PROJECT" || action === "DELETE_PROJECT") {
         return (
-          <span className="text-xs text-(--color-text)">
-            Dự án:{" "}
-            <strong className="font-semibold text-(--color-text)">{details.projectName || details.projectId}</strong>
+          <span className="text-xs">
+            Dự án: <strong className="font-semibold">{details.projectName || details.projectId}</strong>
           </span>
         );
       }
@@ -120,12 +119,12 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
         return (
           <div className="space-y-1 text-xs">
             <div>
-              Dự án: <strong className="font-semibold text-(--color-text)">{details.projectName}</strong>
+              Dự án: <strong className="font-semibold">{details.projectName}</strong>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-(--color-text-muted)">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
               <span>Bước {details.oldStep}</span>
               <span>→</span>
-              <span className="font-semibold text-(--color-primary)">Bước {details.newStep}</span>
+              <span className="text-primary font-semibold">Bước {details.newStep}</span>
               {details.percentage !== undefined && (
                 <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-bold">
                   {details.percentage}%
@@ -133,7 +132,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
               )}
             </div>
             {details.note && (
-              <div className="max-w-md truncate text-[11px] text-(--color-text-muted) italic">
+              <div className="text-muted-foreground max-w-md truncate text-[11px] italic">
                 &quot;{details.note}&quot;
               </div>
             )}
@@ -145,9 +144,9 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
         return (
           <div className="space-y-1 text-xs">
             <div>
-              Dự án: <strong className="font-semibold text-(--color-text)">{details.projectName || "Không rõ"}</strong>
+              Dự án: <strong className="font-semibold">{details.projectName || "Không rõ"}</strong>
             </div>
-            <div className="text-[11px] text-(--color-text-muted)">
+            <div className="text-muted-foreground text-[11px]">
               File:{" "}
               <span className="inline-block max-w-50 truncate align-bottom font-medium underline">
                 {details.fileName}
@@ -160,20 +159,20 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
 
       if (action === "CREATE_USER" || action === "UPDATE_USER" || action === "DELETE_USER") {
         return (
-          <span className="text-xs text-(--color-text)">
-            Tài khoản: <strong className="font-semibold text-(--color-text)">{details.targetName}</strong> (
+          <span className="text-xs">
+            Tài khoản: <strong className="font-semibold">{details.targetName}</strong> (
             {details.targetEmail || details.targetRole})
           </span>
         );
       }
 
       return (
-        <pre className="bg-muted/40 max-h-20 max-w-xs overflow-auto rounded p-1 font-mono text-[10px] text-(--color-text-muted)">
+        <pre className="bg-muted/40 text-muted-foreground max-h-20 max-w-xs overflow-auto rounded p-1 font-mono text-[10px]">
           {JSON.stringify(details, null, 2)}
         </pre>
       );
     } catch {
-      return <span className="text-xs text-(--color-text)">{detailsStr}</span>;
+      return <span className="text-xs">{detailsStr}</span>;
     }
   };
 
@@ -181,15 +180,15 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
     <div className="animate-in space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black tracking-tight text-(--color-text)">Nhật ký hoạt động</h1>
-        <p className="mt-1 text-sm text-(--color-text-muted)">Lịch sử hoạt động của người dùng trên hệ thống CRM</p>
+        <h1 className="text-2xl font-black tracking-tight">Nhật ký hoạt động</h1>
+        <p className="text-muted-foreground mt-1 text-sm">Lịch sử hoạt động của người dùng trên hệ thống CRM</p>
       </div>
 
       {/* Filters Card */}
-      <Card className="border border-(--color-border) bg-(--color-surface) shadow-sm">
+      <Card className="border-border border bg-(--color-surface) shadow-sm">
         <CardHeader className="px-4 pt-4 pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-            <Filter className="h-4 w-4 text-(--color-primary)" />
+            <Filter className="text-primary h-4 w-4" />
             Bộ lọc tìm kiếm
           </CardTitle>
         </CardHeader>
@@ -197,7 +196,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
             {/* Search Input */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-(--color-text-muted)">Từ khóa</label>
+              <label className="text-muted-foreground text-xs font-semibold">Từ khóa</label>
               <div className="relative">
                 <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                 <Input
@@ -211,7 +210,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
 
             {/* User Select */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-(--color-text-muted)">Người thực hiện</label>
+              <label className="text-muted-foreground text-xs font-semibold">Người thực hiện</label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tất cả" />
@@ -229,7 +228,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
 
             {/* Action Select */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-(--color-text-muted)">Hành động</label>
+              <label className="text-muted-foreground text-xs font-semibold">Hành động</label>
               <Select value={selectedAction} onValueChange={setSelectedAction}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tất cả" />
@@ -247,13 +246,13 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
 
             {/* Date From */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-(--color-text-muted)">Từ ngày</label>
+              <label className="text-muted-foreground text-xs font-semibold">Từ ngày</label>
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
 
             {/* Date To */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-(--color-text-muted)">Đến ngày</label>
+              <label className="text-muted-foreground text-xs font-semibold">Đến ngày</label>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
@@ -278,10 +277,10 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
       </Card>
 
       {/* Logs Table Card */}
-      <Card className="border border-(--color-border) bg-(--color-surface) shadow-sm">
-        <CardHeader className="border-b border-(--color-border) p-4">
+      <Card className="border-border border bg-(--color-surface) shadow-sm">
+        <CardHeader className="border-border border-b p-4">
           <CardTitle className="flex items-center gap-2 text-base font-bold">
-            <Activity className="h-4.5 w-4.5 text-(--color-primary)" />
+            <Activity className="text-primary h-4.5 w-4.5" />
             Danh sách nhật ký hoạt động ({logs.length})
           </CardTitle>
         </CardHeader>
@@ -289,7 +288,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="bg-muted/40 border-b border-(--color-border) font-semibold text-(--color-text-muted)">
+                <tr className="bg-muted/40 text-muted-foreground border-border border-b font-semibold">
                   <th className="px-5 py-3.5 text-xs tracking-wider uppercase">Thời gian</th>
                   <th className="px-5 py-3.5 text-xs tracking-wider uppercase">Người thực hiện</th>
                   <th className="px-5 py-3.5 text-xs tracking-wider uppercase">Hành động</th>
@@ -307,7 +306,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
                   return (
                     <tr key={log.id} className="group transition-colors hover:bg-(--color-surface-elevated)">
                       {/* Time */}
-                      <td className="px-5 py-4 text-xs whitespace-nowrap text-(--color-text-muted)">
+                      <td className="text-muted-foreground px-5 py-4 text-xs whitespace-nowrap">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5" />
                           {formatDate(log.createdAt)}
@@ -317,19 +316,19 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
                       {/* User */}
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-xs font-bold text-(--color-text)">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-xs font-bold">
                             {log.user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-1">
-                              <span className="text-xs font-semibold text-(--color-text)">{log.user.name}</span>
+                              <span className="text-xs font-semibold">{log.user.name}</span>
                               {isSelf && (
                                 <Badge variant="outline" className="h-4 px-1 py-0 text-[9px]">
                                   bạn
                                 </Badge>
                               )}
                             </div>
-                            <span className="block text-[10px] text-(--color-text-muted)">{log.user.email}</span>
+                            <span className="text-muted-foreground block text-[10px]">{log.user.email}</span>
                           </div>
                         </div>
                       </td>
@@ -346,7 +345,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
 
                       {/* IP and Device */}
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="space-y-1 text-[11px] text-(--color-text-muted)">
+                        <div className="text-muted-foreground space-y-1 text-[11px]">
                           <span className="flex items-center gap-1">
                             <Globe className="h-3.5 w-3.5 shrink-0" />
                             {log.ipAddress || "Không rõ IP"}
@@ -374,7 +373,7 @@ export function LogsPageClient({ initialLogs, users, actions, currentUserId }: L
 
                 {logs.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-16 text-center text-sm text-(--color-text-muted)">
+                    <td colSpan={5} className="text-muted-foreground py-16 text-center text-sm">
                       Không tìm thấy lịch sử hoạt động nào khớp với bộ lọc
                     </td>
                   </tr>

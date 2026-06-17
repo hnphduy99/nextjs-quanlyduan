@@ -175,7 +175,6 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           endDate: sd.endDate ? format(sd.endDate, "yyyy-MM-dd") : undefined
         }))
     };
-    console.log("🚀 ~ onSubmit ~ formattedData:", formattedData);
 
     const result = await createProject(formattedData);
     if (result?.error) {

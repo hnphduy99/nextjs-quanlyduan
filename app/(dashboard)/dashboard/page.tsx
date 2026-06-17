@@ -43,15 +43,13 @@ function StatCard({
   value,
   icon: Icon,
   iconColor,
-  iconBg,
-  trend
+  iconBg
 }: {
   label: string;
   value: number | string;
   icon: React.ElementType;
   iconColor: string;
   iconBg: string;
-  trend?: string;
 }) {
   return (
     <Card className="group relative overflow-hidden transition-transform duration-200 hover:scale-[1.01]">
@@ -59,14 +57,8 @@ function StatCard({
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="mb-2 text-xs font-medium tracking-widest text-(--color-text-muted) uppercase">{label}</p>
-            <p className="text-4xl leading-none font-black text-(--color-text) tabular-nums">{value}</p>
-            {trend && (
-              <p className="mt-2 flex items-center gap-1 text-xs text-(--color-text-muted)">
-                <TrendingUp className="h-3 w-3" />
-                {trend}
-              </p>
-            )}
+            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-widest uppercase">{label}</p>
+            <p className="text-4xl leading-none font-black tabular-nums">{value}</p>
           </div>
           <div className={`h-12 w-12 rounded-xl ${iconBg} flex shrink-0 items-center justify-center`}>
             <Icon className={`h-5 w-5 ${iconColor}`} />
@@ -93,10 +85,10 @@ function ProjectProgressBar({
     percentage === 100
       ? "bg-emerald-500"
       : percentage >= 50
-        ? "bg-(--color-primary)"
+        ? "bg-primary"
         : percentage > 0
           ? "bg-amber-500"
-          : "bg-(--color-border)";
+          : "bg-border";
 
   return (
     <Link href={`/projects/${id}`} className="group flex items-center gap-3 py-2.5 transition-opacity hover:opacity-80">
@@ -105,19 +97,17 @@ function ProjectProgressBar({
       </div>
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex items-center justify-between">
-          <span className="truncate text-sm font-medium text-(--color-text) transition-colors group-hover:text-(--color-primary)">
-            {name}
-          </span>
-          <span className="ml-3 shrink-0 text-xs font-bold text-(--color-text-muted) tabular-nums">{percentage}%</span>
+          <span className="group-hover:text-primary truncate text-sm font-medium transition-colors">{name}</span>
+          <span className="text-muted-foreground ml-3 shrink-0 text-xs font-bold tabular-nums">{percentage}%</span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-(--color-border)">
+        <div className="bg-border h-1.5 w-full overflow-hidden rounded-full">
           <div
             className={`h-full ${color} rounded-full transition-all duration-700 ease-out`}
             style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
-      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-(--color-text-muted) opacity-0 transition-opacity group-hover:opacity-100" />
+      <ArrowRight className="text-muted-foreground h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
     </Link>
   );
 }
@@ -146,12 +136,12 @@ export default async function DashboardPage({
       {/* ── HEADER ── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-(--color-text)">Tổng quan</h1>
-          <p className="mt-1 text-sm text-(--color-text-muted)">Theo dõi tiến độ và hoạt động của toàn bộ hệ thống</p>
+          <h1 className="text-2xl font-black tracking-tight">Tổng quan</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Theo dõi tiến độ và hoạt động của toàn bộ hệ thống</p>
         </div>
         <Link
           href="/projects"
-          className="flex items-center gap-2 text-sm font-medium text-(--color-primary) transition-colors hover:text-(--color-primary-hover)"
+          className="hover:text-primary-foreground text-primary flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
         >
           <FolderKanban className="h-4 w-4" />
           Xem tất cả dự án
@@ -168,7 +158,7 @@ export default async function DashboardPage({
           label="Tổng dự án"
           value={kpis.totalProjects}
           icon={FolderKanban}
-          iconColor="text-(--color-primary)"
+          iconColor="text-primary"
           iconBg="bg-primary/15"
         />
         <StatCard
@@ -177,11 +167,6 @@ export default async function DashboardPage({
           icon={CheckCircle2}
           iconColor="text-emerald-400"
           iconBg="bg-emerald-500/15"
-          trend={
-            kpis.totalProjects > 0
-              ? `${Math.round((kpis.completedProjects / kpis.totalProjects) * 100)}% tổng số`
-              : undefined
-          }
         />
         <StatCard
           label="Đang thực hiện"
@@ -196,7 +181,6 @@ export default async function DashboardPage({
           icon={AlertTriangle}
           iconColor="text-rose-400"
           iconBg="bg-rose-500/15"
-          trend={overdueProjects.length > 0 ? "Cần xử lý ngay" : "Đúng tiến độ"}
         />
         <StatCard
           label="TB hoàn thành"
@@ -209,9 +193,9 @@ export default async function DashboardPage({
 
       {/* ── STEP DISTRIBUTION ── */}
       <Card>
-        <CardHeader className="border-b border-(--color-border) p-3">
+        <CardHeader className="border-border border-b p-3">
           <CardTitle className="flex items-center gap-2 text-base font-bold">
-            <BarChart3 className="h-4 w-4 text-(--color-primary)" />
+            <BarChart3 className="text-primary h-4 w-4" />
             Phân bố dự án theo bước
           </CardTitle>
         </CardHeader>
@@ -227,8 +211,8 @@ export default async function DashboardPage({
                     <div className={`h-2 w-2 rounded-full ${colors.dot}`} />
                     <span className={`text-xs font-medium ${colors.text}`}>Bước {stepOrder}</span>
                   </div>
-                  <p className="mt-2 text-3xl font-black text-(--color-text) tabular-nums">{count}</p>
-                  <p className="mt-0.5 text-xs text-(--color-text-muted)">{STEP_NAMES[stepOrder]}</p>
+                  <p className="mt-2 text-3xl font-black tabular-nums">{count}</p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">{STEP_NAMES[stepOrder]}</p>
                 </div>
               );
             })}
@@ -237,23 +221,22 @@ export default async function DashboardPage({
       </Card>
 
       {/* ── MAIN BODY ── */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
-        {/* LEFT: Progress + Overdue */}
-        <div className="space-y-6 xl:col-span-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-6">
+        <div className="space-y-6 xl:col-span-2">
           {/* Project Progress List — sorted by step (high first) */}
           <Card>
-            <CardHeader className="border-b border-(--color-border) p-3">
+            <CardHeader className="border-border border-b p-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <TrendingUp className="h-4 w-4 text-(--color-primary)" />
+                <TrendingUp className="text-primary h-4 w-4" />
                 Tiến độ dự án
-                <span className="ml-auto text-xs font-normal text-(--color-text-muted)">Ưu tiên bước cao hơn</span>
+                <span className="text-muted-foreground ml-auto text-xs font-normal">Ưu tiên bước cao hơn</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 pt-2">
               {topProjects.length === 0 ? (
-                <div className="py-10 text-center text-sm text-(--color-text-muted)">Chưa có dự án nào</div>
+                <div className="text-muted-foreground py-10 text-center text-sm">Chưa có dự án nào</div>
               ) : (
-                <div className="divide-y divide-(--color-border)">
+                <div className="divide-border divide-y">
                   {topProjects.map((project) => (
                     <ProjectProgressBar
                       key={project.id}
@@ -266,11 +249,8 @@ export default async function DashboardPage({
                 </div>
               )}
               {projectsByProgress.length > 6 && (
-                <div className="border-t border-(--color-border) pt-3">
-                  <Link
-                    href="/projects"
-                    className="flex items-center gap-1 text-xs text-(--color-primary) hover:underline"
-                  >
+                <div className="border-border border-t pt-3">
+                  <Link href="/projects" className="text-primary flex items-center gap-1 text-xs hover:underline">
                     Xem thêm {projectsByProgress.length - 6} dự án khác
                     <ArrowRight className="h-3 w-3" />
                   </Link>
@@ -279,68 +259,16 @@ export default async function DashboardPage({
             </CardContent>
           </Card>
 
-          {/* Overdue Projects */}
-          {overdueProjects.length > 0 && (
-            <Card className="border-rose-500/30">
-              <CardHeader className="border-b border-rose-500/20 bg-rose-500/5 p-3">
-                <CardTitle className="flex items-center gap-2 text-base font-bold text-rose-400">
-                  <AlertTriangle className="h-4 w-4" />
-                  Dự án quá hạn ({overdueProjects.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-(--color-border)">
-                  {overdueProjects.map((p) => {
-                    const currentStep = p.steps.find((s) => s.stepOrder === p.currentStepOrder);
-                    // const isOverdue = currentStep?.endDate && currentStep.endDate < new Date();
-                    return (
-                      <Link
-                        key={p.id}
-                        href={`/projects/${p.id}`}
-                        className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-(--color-surface-elevated)"
-                      >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15">
-                          <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-(--color-text) transition-colors group-hover:text-rose-400">
-                            {p.name}
-                          </p>
-                          <p className="mt-0.5 flex items-center gap-1 text-xs text-(--color-text-muted)">
-                            <User className="h-3 w-3" />
-                            {p.createdBy.name}
-                            {currentStep && (
-                              <>
-                                <span className="mx-1">·</span>
-                                <span className="text-rose-400">
-                                  Bước {currentStep.stepOrder}: hạn{" "}
-                                  {currentStep.endDate ? formatDate(currentStep.endDate) : "N/A"}
-                                </span>
-                              </>
-                            )}
-                          </p>
-                        </div>
-                        <Badge variant="destructive" className="shrink-0 text-xs">
-                          Quá hạn
-                        </Badge>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Recent Projects Table */}
           <Card>
-            <CardHeader className="border-b border-(--color-border) p-3">
+            <CardHeader className="border-border border-b p-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
                 <Clock className="h-4 w-4 text-amber-400" />
                 Dự án gần đây
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-[28vh] overflow-y-auto p-0">
-              <div className="divide-y divide-(--color-border)">
+              <div className="divide-border divide-y">
                 {recentProjects.map((p) => {
                   const currentStep = p.steps.find((s) => s.stepOrder === p.currentStepOrder);
                   return (
@@ -350,13 +278,13 @@ export default async function DashboardPage({
                       className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-(--color-surface-elevated)"
                     >
                       <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-                        <FolderKanban className="h-3.5 w-3.5 text-(--color-primary)" />
+                        <FolderKanban className="text-primary h-3.5 w-3.5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-(--color-text) transition-colors group-hover:text-(--color-primary)">
+                        <p className="group-hover:text-primary truncate text-sm font-semibold transition-colors">
                           {p.name}
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-(--color-text-muted)">
+                        <p className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
                           <User className="h-3 w-3" />
                           {p.createdBy.name}
                           {currentStep && (
@@ -381,17 +309,72 @@ export default async function DashboardPage({
                   );
                 })}
                 {recentProjects.length === 0 && (
-                  <div className="py-10 text-center text-sm text-(--color-text-muted)">Chưa có dự án nào</div>
+                  <div className="text-muted-foreground py-10 text-center text-sm">Chưa có dự án nào</div>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* RIGHT: Activity Feed */}
+        <div className="space-y-6 xl:col-span-2">
+          {/* Overdue Projects */}
+          <Card className="border-rose-500/30">
+            <CardHeader className="border-b border-rose-500/20 bg-rose-500/5 p-3">
+              <CardTitle className="flex items-center gap-2 text-base font-bold text-rose-400">
+                <AlertTriangle className="h-4 w-4" />
+                Dự án quá hạn ({overdueProjects.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="max-h-[54vh] overflow-y-auto p-0">
+              {overdueProjects.length === 0 ? (
+                <div className="text-muted-foreground py-10 text-center text-sm">Chưa có dự án nào quá hạn</div>
+              ) : (
+                <div className="divide-border divide-y">
+                  {overdueProjects.map((p) => {
+                    const currentStep = p.steps.find((s) => s.stepOrder === p.currentStepOrder);
+                    // const isOverdue = currentStep?.endDate && currentStep.endDate < new Date();
+                    return (
+                      <Link
+                        key={p.id}
+                        href={`/projects/${p.id}`}
+                        className="group flex items-center gap-4 rounded-xl px-5 py-3.5 transition-colors hover:bg-(--color-surface-elevated)"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15">
+                          <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold transition-colors group-hover:text-rose-400">
+                            {p.name}
+                          </p>
+                          <p className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
+                            <User className="h-3 w-3" />
+                            {p.createdBy.name}
+                            {currentStep && (
+                              <>
+                                <span className="mx-1">·</span>
+                                <span className="text-rose-400">
+                                  Bước {currentStep.stepOrder}: hạn{" "}
+                                  {currentStep.endDate ? formatDate(currentStep.endDate) : "N/A"}
+                                </span>
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <Badge variant="destructive" className="shrink-0 text-xs">
+                          Quá hạn
+                        </Badge>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="space-y-6 xl:col-span-2">
           <Card>
-            <CardHeader className="border-b border-(--color-border) p-3">
+            <CardHeader className="border-border border-b p-3">
               <CardTitle className="flex items-center gap-2 text-base font-bold">
                 <Activity className="h-4 w-4 text-sky-400" />
                 Hoạt động gần đây
@@ -399,9 +382,9 @@ export default async function DashboardPage({
             </CardHeader>
             <CardContent className="max-h-[54vh] overflow-y-auto p-0">
               {recentLogs.length === 0 ? (
-                <div className="py-10 text-center text-sm text-(--color-text-muted)">Chưa có hoạt động nào</div>
+                <div className="text-muted-foreground py-10 text-center text-sm">Chưa có hoạt động nào</div>
               ) : (
-                <div className="divide-y divide-(--color-border)">
+                <div className="divide-border divide-y">
                   {recentLogs.map((log) => (
                     <div
                       key={log.id}
@@ -409,20 +392,20 @@ export default async function DashboardPage({
                     >
                       <div className="flex shrink-0 flex-col items-center pt-1">
                         <div
-                          className={`h-2 w-2 shrink-0 rounded-full ${log.newPercentage === 100 ? "bg-emerald-500" : "bg-(--color-primary)"}`}
+                          className={`h-2 w-2 shrink-0 rounded-full ${log.newPercentage === 100 ? "bg-emerald-500" : "bg-primary"}`}
                         />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-primary truncate text-xs font-semibold">{log.project.name}</p>
-                        <p className="mt-0.5 text-[11px] text-(--color-text-muted)">
+                        <p className="text-muted-foreground mt-0.5 text-[11px]">
                           Bước {log.oldStep} → {log.newStep} · {log.oldPercentage}% → {log.newPercentage}%
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-(--color-text-muted)">
+                        <p className="text-muted-foreground mt-0.5 flex items-center gap-1 text-[11px]">
                           <User className="h-2.5 w-2.5" />
                           {log.updatedBy.name} · {formatDate(log.changedAt)}
                         </p>
                         {log.note && (
-                          <p className="mt-1 truncate text-[11px] text-(--color-text-muted) italic">
+                          <p className="text-muted-foreground mt-1 truncate text-[11px] italic">
                             &ldquo;{log.note}&rdquo;
                           </p>
                         )}

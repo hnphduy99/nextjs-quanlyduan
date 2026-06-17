@@ -1,11 +1,11 @@
 "use client";
 
-import { CreateUserDialog } from "@/components/user-management/create-user-dialog";
-import { DeleteUserButton } from "@/components/user-management/delete-user-button";
-import { EditUserDialog } from "@/components/user-management/edit-user-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreateUserDialog } from "@/components/user-management/create-user-dialog";
+import { DeleteUserButton } from "@/components/user-management/delete-user-button";
+import { EditUserDialog } from "@/components/user-management/edit-user-dialog";
 import { formatDate } from "@/lib/utils";
 import { Crown, Pencil, Plus, Shield, ShieldCheck, User, Users } from "lucide-react";
 import { useState } from "react";
@@ -24,7 +24,7 @@ const ROLE_META: Record<
 > = {
   ADMIN: { label: "Admin", variant: "default", icon: Crown, color: "text-amber-400" },
   PM: { label: "PM", variant: "secondary", icon: ShieldCheck, color: "text-(--color-primary)" },
-  MEMBER: { label: "Member", variant: "outline", icon: User, color: "text-(--color-text-muted)" }
+  MEMBER: { label: "Member", variant: "outline", icon: User, color: "text-muted-foreground" }
 };
 
 export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; currentUserId: string }) {
@@ -40,10 +40,8 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-(--color-text)">Phân quyền</h1>
-          <p className="mt-1 text-sm text-(--color-text-muted)">
-            Quản lý tài khoản và vai trò người dùng trong hệ thống
-          </p>
+          <h1 className="text-2xl font-black tracking-tight">Phân quyền</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Quản lý tài khoản và vai trò người dùng trong hệ thống</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
@@ -90,14 +88,14 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
 
       {/* User Table */}
       <Card>
-        <CardHeader className="border-b border-(--color-border) p-4">
+        <CardHeader className="border-border border-b p-4">
           <CardTitle className="flex items-center gap-2 text-base font-bold">
-            <Shield className="h-4 w-4 text-(--color-primary)" />
+            <Shield className="text-primary h-4 w-4" />
             Danh sách người dùng ({users.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-(--color-border)">
+          <div className="divide-border divide-y">
             {users.map((u) => {
               const meta = ROLE_META[u.role];
               const RoleIcon = meta.icon;
@@ -108,21 +106,21 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
                   className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-(--color-surface-elevated)"
                 >
                   {/* Avatar */}
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-sm font-bold text-(--color-text)">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-border) text-sm font-bold">
                     {u.name.charAt(0).toUpperCase()}
                   </div>
 
                   {/* Info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-(--color-text)">{u.name}</p>
+                      <p className="text-sm font-semibold">{u.name}</p>
                       {isSelf && (
                         <Badge variant="outline" className="text-[10px]">
                           (bạn)
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-(--color-text-muted)">{u.email}</p>
+                    <p className="text-muted-foreground text-xs">{u.email}</p>
                   </div>
 
                   {/* Role */}
@@ -134,7 +132,7 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
                   </div>
 
                   {/* Date */}
-                  <p className="hidden text-xs text-(--color-text-muted) sm:block">{formatDate(u.createdAt)}</p>
+                  <p className="text-muted-foreground hidden text-xs sm:block">{formatDate(u.createdAt)}</p>
 
                   {/* Actions */}
                   <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -153,7 +151,7 @@ export function UsersPageClient({ users, currentUserId }: { users: UserItem[]; c
               );
             })}
             {users.length === 0 && (
-              <div className="py-16 text-center text-sm text-(--color-text-muted)">Chưa có người dùng nào</div>
+              <div className="text-muted-foreground py-16 text-center text-sm">Chưa có người dùng nào</div>
             )}
           </div>
         </CardContent>

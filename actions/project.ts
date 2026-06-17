@@ -1,9 +1,9 @@
 "use server";
 
+import { logActivity } from "@/lib/audit-logger";
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { calcPercentageByStep, DEFAULT_STEPS } from "@/lib/project-constants";
-import { logActivity } from "@/lib/audit-logger";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
