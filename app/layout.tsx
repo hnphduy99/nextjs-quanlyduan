@@ -1,4 +1,5 @@
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
@@ -23,7 +24,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning className={`${inter.variable} h-full antialiased`}>
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>

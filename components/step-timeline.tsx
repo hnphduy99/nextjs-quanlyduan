@@ -41,7 +41,7 @@ export function StepTimeline({ steps, currentStepOrder }: StepTimelineProps) {
                 </div>
                 <span
                   className={cn(
-                    "mt-2 w-25 text-center text-xs leading-tight font-medium",
+                    "mt-2 w-30 text-center text-xs leading-tight font-medium",
                     isCurrent ? "text-primary" : isCompleted ? "text-emerald-400" : "text-muted-foreground"
                   )}
                 >
