@@ -68,7 +68,6 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete, can
         <div className="stagger-children grid max-h-[calc(100vh-16rem)] gap-4 overflow-y-auto pr-1">
           {projects.map((project) => {
             const currentStep = project.steps.find((s) => s.stepOrder === project.currentStepOrder);
-            console.log("🚀 ~ ProjectsClient ~ currentStep:", currentStep);
             return (
               <Card
                 key={project.id}
@@ -87,12 +86,9 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete, can
                         <Badge variant={project.percentage === 100 ? "success" : "secondary"}>
                           {project.percentage}%
                         </Badge>
-                        {currentStep?.endDate && (
-                          <Badge
-                            variant={new Date(currentStep.endDate) < new Date() ? "destructive" : "outline"}
-                            className="text-xs"
-                          >
-                            {new Date(currentStep.endDate) < new Date() ? "Quá hạn" : "Đúng hạn"}
+                        {currentStep?.endDate && new Date(currentStep?.endDate) < new Date() && (
+                          <Badge variant={"destructive"} className="text-xs">
+                            Quá hạn
                           </Badge>
                         )}
                       </div>
@@ -121,7 +117,7 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete, can
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
+                    <div className="flex shrink-0 items-center gap-2">
                       <Link href={`/projects/${project.id}`}>
                         <Badge
                           variant="outline"
