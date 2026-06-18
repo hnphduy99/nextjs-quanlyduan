@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import { ArrowRight, FileImage, FileSpreadsheet, FileText, MapPin, Presentation } from "lucide-react";
+import { ArrowRight, FileImage, FileSpreadsheet, FileText, Presentation } from "lucide-react";
 
 interface LogEntry {
   id: string;
@@ -85,7 +85,7 @@ export function ProjectLogTable({ logs, files = [] }: { logs: LogEntry[]; files?
                         ? "text-emerald-400"
                         : log.newPercentage > log.oldPercentage
                           ? "text-(--color-primary)"
-                          : "text-(--color-text)"
+                          : ""
                     }`}
                   >
                     {log.newPercentage}%
@@ -99,31 +99,26 @@ export function ProjectLogTable({ logs, files = [] }: { logs: LogEntry[]; files?
 
             {/* Note */}
             {log.note && (
-              <div className="mt-3 border-t border-(--color-border) pt-3">
-                <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wider uppercase">
-                  Kết quả triển khai
-                </p>
-                <p className="text-sm text-(--color-text)">{log.note}</p>
+              <div className="border-border mt-3 border-t pt-3">
+                <p className="mb-1 text-xs font-medium tracking-wider uppercase">Kết quả triển khai</p>
+                <p className="text-sm">{log.note}</p>
               </div>
             )}
 
             {/* Next Plan */}
             {log.nextPlan && (
               <div className="mt-2 flex gap-2">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                 <div>
-                  <p className="text-xs font-medium text-amber-400">Kế hoạch tiếp theo</p>
-                  <p className="text-muted-foreground text-sm">{log.nextPlan}</p>
+                  <p className="text-xs font-medium uppercase">Kế hoạch tiếp theo</p>
+                  <p className="text-sm">{log.nextPlan}</p>
                 </div>
               </div>
             )}
 
             {/* Files associated with this step */}
             {stepFiles.length > 0 && (
-              <div className="mt-3 border-t border-(--color-border) pt-3">
-                <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wider uppercase">
-                  Tài liệu đính kèm
-                </p>
+              <div className="border-border mt-3 border-t pt-3">
+                <p className="mb-2 text-xs font-medium tracking-wider uppercase">Tài liệu đính kèm</p>
                 <div className="flex flex-wrap gap-2">
                   {stepFiles.map((file) => (
                     <a

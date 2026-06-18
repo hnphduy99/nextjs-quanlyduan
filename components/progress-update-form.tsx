@@ -122,24 +122,26 @@ export function ProgressUpdateForm({
             </Select>
           )}
         />
-        {errors.newStepOrder && <p className="text-sm text-(--color-destructive)">{errors.newStepOrder.message}</p>}
+        {errors.newStepOrder && <p className="text-destructive text-sm">{errors.newStepOrder.message}</p>}
 
         {/* Preview % */}
-        <div className="flex items-center gap-2 rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2">
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-(--color-border)">
+        <div className="border-border flex items-center gap-2 rounded-lg border bg-(--color-surface) px-3 py-2">
+          <div className="bg-border h-2 flex-1 overflow-hidden rounded-full">
             <div
-              className="h-full rounded-full bg-(--color-primary) transition-all duration-500"
+              className="bg-primary h-full rounded-full transition-all duration-500"
               style={{ width: `${previewPercentage}%` }}
             />
           </div>
-          <span className="text-sm font-bold text-(--color-primary) tabular-nums">{previewPercentage}%</span>
+          <span className="text-primary text-sm font-bold tabular-nums">{previewPercentage}%</span>
         </div>
         {/* <p className="text-xs text-(--color-text-muted)">% hoàn thành tự tính theo bước — không cần nhập thủ công</p> */}
       </div>
 
       {/* Tiến độ/Kết quả đã triển khai */}
       <div className="space-y-1.5">
-        <Label htmlFor="note">Tiến độ / Kết quả đã triển khai</Label>
+        <Label htmlFor="note">
+          Tiến độ / Kết quả đã triển khai <span className="text-destructive">*</span>
+        </Label>
         <Textarea
           id="note"
           placeholder="Mô tả kết quả đã đạt được, công việc đã hoàn thành..."
@@ -151,7 +153,9 @@ export function ProgressUpdateForm({
 
       {/* Kế hoạch triển khai tiếp theo */}
       <div className="space-y-1.5">
-        <Label htmlFor="nextPlan">Kế hoạch triển khai tiếp theo</Label>
+        <Label htmlFor="nextPlan">
+          Kế hoạch triển khai tiếp theo <span className="text-destructive">*</span>
+        </Label>
         <Textarea
           id="nextPlan"
           placeholder="Mô tả kế hoạch công việc tiếp theo cần thực hiện..."

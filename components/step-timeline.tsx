@@ -1,10 +1,12 @@
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 interface Step {
   id: string;
   stepName: string;
   stepOrder: number;
+  startDate: Date | null;
+  endDate: Date | null;
 }
 
 interface StepTimelineProps {
@@ -64,6 +66,10 @@ export function StepTimeline({ steps, currentStepOrder }: StepTimelineProps) {
                 <span className="text-muted-foreground mt-0.5 text-xs">
                   Bước {step.stepOrder} · {step.stepOrder * 25}%
                 </span>
+                <span className="text-xs">
+                  {step.startDate ? formatDate(step.startDate).split(" ")[1] : "--/--/----"} -{" "}
+                  {step.endDate ? formatDate(step.endDate).split(" ")[1] : "--/--/----"}
+                </span>
               </div>
             </div>
           );
@@ -80,7 +86,7 @@ export function StepTimeline({ steps, currentStepOrder }: StepTimelineProps) {
           return (
             <div key={step.id} className={cn("flex items-center", !isLast && "flex-1")}>
               {/* Step Circle */}
-              <div className="flex h-20 flex-col items-center">
+              <div className="flex h-26 flex-col items-center">
                 <div
                   className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-500",
@@ -103,11 +109,15 @@ export function StepTimeline({ steps, currentStepOrder }: StepTimelineProps) {
                 >
                   {step.stepName}
                 </span>
+                <span className="mt-2 text-xs">
+                  {step.startDate ? formatDate(step.startDate).split(" ")[1] : "--/--/----"} -{" "}
+                  {step.endDate ? formatDate(step.endDate).split(" ")[1] : "--/--/----"}
+                </span>
               </div>
 
               {/* Connector Line */}
               {!isLast && (
-                <div className="mx-2 -mt-8 flex-1">
+                <div className="mx-2 -mt-16 flex-1">
                   <div
                     className={cn(
                       "h-0.5 w-full transition-all duration-700",

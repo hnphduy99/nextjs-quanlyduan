@@ -275,10 +275,7 @@ export function ImportProjectsDialog({ open, onOpenChange }: ImportProjectsDialo
                   <p className="text-foreground font-semibold">Phát hiện bản ghi không hợp lệ!</p>
                   <p className="mt-0.5">Tải báo cáo để xem nguyên nhân cụ thể từng dòng.</p>
                 </div>
-                <Button
-                  onClick={handleDownloadErrors}
-                  className="border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90 flex w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-none border-2 text-xs sm:w-auto"
-                >
+                <Button variant="destructive" onClick={handleDownloadErrors}>
                   <Download className="h-3.5 w-3.5" />
                   Tải file lỗi
                 </Button>

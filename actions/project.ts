@@ -23,22 +23,22 @@ import { z } from "zod";
 
 const StepDateSchema = z.object({
   stepOrder: z.number().int().positive(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional()
+  startDate: z.string().min(1, "Ngày bắt đầu không được để trống"),
+  endDate: z.string().min(1, "Ngày kết thúc không được để trống")
 });
 
 const CreateProjectSchema = z.object({
   name: z.string().min(1, "Tên dự án không được trống").max(200),
   description: z.string().optional(),
   category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]),
-  investor: z.string().optional(),
-  expectedRevenue: z.number().optional(),
-  decisionMaker: z.string().optional(),
-  contactPerson: z.string().optional(),
+  investor: z.string().min(1, "Chủ đầu tư không được trống"),
+  expectedRevenue: z.number().min(1, "Dự kiến doanh thu không được trống"),
+  decisionMaker: z.string().min(1, "Người ra quyết định không được trống"),
+  contactPerson: z.string().min(1, "Người liên hệ không được trống"),
   deploymentType: z.enum(["MUA", "THUE"]),
-  feasibilityScore: z.number().int().min(0).max(100).optional(),
-  expectedCompletionDate: z.string().optional(),
-  stepDates: z.array(StepDateSchema).optional()
+  feasibilityScore: z.number().int().min(0).max(100).min(1, "Khả năng khả thi không được trống"),
+  expectedCompletionDate: z.string().min(1, "Ngày dự kiến hoàn thành không được trống"),
+  stepDates: z.array(StepDateSchema).min(1, "Phải có ít nhất một bước")
 });
 
 const UpdateProjectSchema = z.object({
@@ -46,14 +46,14 @@ const UpdateProjectSchema = z.object({
   name: z.string().min(1, "Tên dự án không được trống").max(200),
   description: z.string().optional(),
   category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]),
-  investor: z.string().optional(),
-  expectedRevenue: z.number().optional(),
-  decisionMaker: z.string().optional(),
-  contactPerson: z.string().optional(),
+  investor: z.string().min(1, "Chủ đầu tư không được trống"),
+  expectedRevenue: z.number().min(1, "Dự kiến doanh thu không được trống"),
+  decisionMaker: z.string().min(1, "Người ra quyết định không được trống"),
+  contactPerson: z.string().min(1, "Người liên hệ không được trống"),
   deploymentType: z.enum(["MUA", "THUE"]),
-  feasibilityScore: z.number().int().min(0).max(100).optional(),
-  expectedCompletionDate: z.string().optional(),
-  stepDates: z.array(StepDateSchema).optional()
+  feasibilityScore: z.number().int().min(0).max(100).min(1, "Khả năng khả thi không được trống"),
+  expectedCompletionDate: z.string().min(1, "Ngày dự kiến hoàn thành không được trống"),
+  stepDates: z.array(StepDateSchema).min(1, "Phải có ít nhất một bước")
 });
 
 export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;
@@ -580,19 +580,6 @@ export async function importProjects(formData: FormData): Promise<{
       const projectName = mappedRow.name ? String(mappedRow.name).trim() : "";
 
       try {
-        const parsedData = {
-          name: projectName,
-          description: mappedRow.description ? String(mappedRow.description).trim() : undefined,
-          category: parseCategory(mappedRow.category),
-          investor: mappedRow.investor ? String(mappedRow.investor).trim() : undefined,
-          expectedRevenue: parseNumber(mappedRow.expectedRevenue),
-          decisionMaker: mappedRow.decisionMaker ? String(mappedRow.decisionMaker).trim() : undefined,
-          contactPerson: mappedRow.contactPerson ? String(mappedRow.contactPerson).trim() : undefined,
-          deploymentType: parseDeploymentType(mappedRow.deploymentType),
-          feasibilityScore: parseFeasibilityScore(mappedRow.feasibilityScore),
-          expectedCompletionDate: parseDateString(mappedRow.expectedCompletionDate)
-        };
-
         // Phân tích ngày cho từng bước
         const stepDatesParsed = [1, 2, 3, 4].map((order) => {
           const startRaw = mappedRow[`step${order}_startDate`];
@@ -603,6 +590,20 @@ export async function importProjects(formData: FormData): Promise<{
             endDate: endRaw ? parseDateString(endRaw) : undefined
           };
         });
+
+        const parsedData = {
+          name: projectName,
+          description: mappedRow.description ? String(mappedRow.description).trim() : undefined,
+          category: parseCategory(mappedRow.category),
+          investor: mappedRow.investor ? String(mappedRow.investor).trim() : undefined,
+          expectedRevenue: parseNumber(mappedRow.expectedRevenue),
+          decisionMaker: mappedRow.decisionMaker ? String(mappedRow.decisionMaker).trim() : undefined,
+          contactPerson: mappedRow.contactPerson ? String(mappedRow.contactPerson).trim() : undefined,
+          deploymentType: parseDeploymentType(mappedRow.deploymentType),
+          feasibilityScore: parseFeasibilityScore(mappedRow.feasibilityScore),
+          expectedCompletionDate: parseDateString(mappedRow.expectedCompletionDate),
+          stepDates: stepDatesParsed
+        };
 
         // Kiểm tra tính hợp lệ của ngày trong từng bước
         for (const step of stepDatesParsed) {

@@ -2,10 +2,10 @@ import { getProjectById } from "@/actions/project";
 import { ProgressUpdateForm } from "@/components/progress-update-form";
 import { ProjectLogTable } from "@/components/project-log-table";
 import { StepTimeline } from "@/components/step-timeline";
-import { CATEGORY_LABELS, DEPLOYMENT_LABELS } from "@/constants/project";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { CATEGORY_LABELS, DEPLOYMENT_LABELS } from "@/constants/project";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 import {
@@ -81,7 +81,7 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             {formatDate(project.createdAt)}
           </span>
           {currentStep && (
-            <Badge variant={isOverdue ? "destructive" : "outline"}>Bước hiện tại: {currentStep.stepName}</Badge>
+            <Badge variant={isOverdue ? "destructive" : "default"}>Bước hiện tại: {currentStep.stepName}</Badge>
           )}
           {project.expectedCompletionDate && (
             <span className="flex items-center gap-1.5">

@@ -68,6 +68,7 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete, can
         <div className="stagger-children grid max-h-[calc(100vh-16rem)] gap-4 overflow-y-auto pr-1">
           {projects.map((project) => {
             const currentStep = project.steps.find((s) => s.stepOrder === project.currentStepOrder);
+            console.log("🚀 ~ ProjectsClient ~ currentStep:", currentStep);
             return (
               <Card
                 key={project.id}
@@ -86,13 +87,21 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete, can
                         <Badge variant={project.percentage === 100 ? "success" : "secondary"}>
                           {project.percentage}%
                         </Badge>
+                        {currentStep?.endDate && (
+                          <Badge
+                            variant={new Date(currentStep.endDate) < new Date() ? "destructive" : "outline"}
+                            className="text-xs"
+                          >
+                            {new Date(currentStep.endDate) < new Date() ? "Quá hạn" : "Đúng hạn"}
+                          </Badge>
+                        )}
                       </div>
 
                       {project.description && (
                         <p className="text-muted-foreground mb-3 line-clamp-1 text-sm">{project.description}</p>
                       )}
 
-                      <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-xs">
+                      <div className="flex flex-wrap items-center gap-4 text-xs">
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           {project.createdBy.name}
@@ -102,7 +111,7 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete, can
                           {formatDate(project.createdAt)}
                         </span>
                         {currentStep && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="default" className="text-xs">
                             Bước {currentStep.stepOrder}: {currentStep.stepName}
                           </Badge>
                         )}

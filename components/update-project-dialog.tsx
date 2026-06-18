@@ -12,8 +12,8 @@ import { DEFAULT_STEPS } from "@/lib/project-constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Building2, CircleDollarSign, Loader2, Phone, Save, ShieldCheck, TrendingUp } from "lucide-react";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { Controller, useForm, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Textarea } from "./ui/textarea";
@@ -48,24 +48,52 @@ interface UpdateProjectDialogProps {
   project: ProjectData | null;
 }
 
-interface StepDate {
-  stepOrder: number;
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-}
+const StepDateSchema = z
+  .object({
+    stepOrder: z.number().int().positive(),
+    startDate: z.date({ message: "Ngày bắt đầu không được để trống" }),
+    endDate: z.date({ message: "Ngày kết thúc không được để trống" })
+  })
+  .refine(
+    (data) => {
+      if (!data.startDate || !data.endDate) return true;
+      return data.startDate <= data.endDate;
+    },
+    {
+      message: "Ngày bắt đầu không được sau ngày kết thúc",
+      path: ["startDate"]
+    }
+  );
 
-const formSchema = z.object({
-  name: z.string().min(1, "Tên dự án không được trống"),
-  description: z.string().optional(),
-  category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]),
-  investor: z.string().min(1, "Chủ đầu tư không được trống"),
-  expectedRevenue: z.string().min(1, "Doanh thu dự kiến không được trống"),
-  decisionMaker: z.string().min(1, "Người quyết định không được trống"),
-  contactPerson: z.string().min(1, "Đầu mối không được trống"),
-  deploymentType: z.enum(["MUA", "THUE"]),
-  feasibilityScore: z.string().min(1, "Đánh giá khả thi không được trống"),
-  expectedCompletionDate: z.date({ message: "Ngày dự kiến nghiệm thu không được trống" })
-});
+const formSchema = z
+  .object({
+    name: z.string().min(1, "Tên dự án không được trống"),
+    description: z.string().optional(),
+    category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]),
+    investor: z.string().min(1, "Chủ đầu tư không được trống"),
+    expectedRevenue: z.string().min(1, "Doanh thu dự kiến không được trống"),
+    decisionMaker: z.string().min(1, "Người quyết định không được trống"),
+    contactPerson: z.string().min(1, "Đầu mối không được trống"),
+    deploymentType: z.enum(["MUA", "THUE"]),
+    feasibilityScore: z.string().min(1, "Đánh giá khả thi không được trống"),
+    expectedCompletionDate: z.date({ message: "Ngày dự kiến nghiệm thu không được trống" }),
+    stepDates: z.array(StepDateSchema).length(4, "Phải có đầy đủ 4 bước")
+  })
+  .superRefine((data, ctx) => {
+    const steps = data.stepDates;
+    for (let i = 1; i < steps.length; i++) {
+      const prev = steps[i - 1];
+      const current = steps[i];
+
+      if (prev.endDate && current.startDate && current.startDate < prev.endDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Không được trước ngày kết thúc của Bước ${prev.stepOrder}`,
+          path: ["stepDates", i, "startDate"]
+        });
+      }
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -74,6 +102,7 @@ export function UpdateProjectDialog({ open, onOpenChange, project }: UpdateProje
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors, isSubmitting }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,111 +116,71 @@ export function UpdateProjectDialog({ open, onOpenChange, project }: UpdateProje
       contactPerson: project?.contactPerson || "",
       deploymentType: project?.deploymentType,
       feasibilityScore: project?.feasibilityScore?.toString() || "",
-      expectedCompletionDate: project?.expectedCompletionDate ? new Date(project.expectedCompletionDate) : undefined
-    }
-  });
-
-  const [error, setError] = useState("");
-  const [stepDates, setStepDates] = useState<StepDate[]>(() => {
-    if (project) {
-      return DEFAULT_STEPS.map((s) => {
-        const step = project.steps.find((st) => st.stepOrder === s.stepOrder);
+      expectedCompletionDate: project?.expectedCompletionDate ? new Date(project.expectedCompletionDate) : undefined,
+      stepDates: DEFAULT_STEPS.map((s) => {
+        const step = project?.steps.find((st) => st.stepOrder === s.stepOrder);
         return {
           stepOrder: s.stepOrder,
           startDate: step?.startDate ? new Date(step.startDate) : undefined,
           endDate: step?.endDate ? new Date(step.endDate) : undefined
         };
-      });
+      })
     }
-    return DEFAULT_STEPS.map((s) => ({ stepOrder: s.stepOrder, startDate: undefined, endDate: undefined }));
   });
 
-  const updateStepDate = (stepOrder: number, field: "startDate" | "endDate", value: Date | undefined) => {
-    setStepDates((prev) => prev.map((sd) => (sd.stepOrder === stepOrder ? { ...sd, [field]: value } : sd)));
-  };
+  const { fields } = useFieldArray({
+    control,
+    name: "stepDates"
+  });
 
-  const getStepError = (stepOrder: number) => {
-    const step = stepDates.find((sd) => sd.stepOrder === stepOrder);
-    if (!step) return null;
+  const [error, setError] = useState("");
 
-    if (step.startDate && step.endDate && step.startDate > step.endDate) {
-      return "Ngày bắt đầu không được sau ngày kết thúc";
+  useEffect(() => {
+    if (project) {
+      reset({
+        name: project.name || "",
+        description: project.description || "",
+        category: project.category,
+        investor: project.investor || "",
+        expectedRevenue: project.expectedRevenue?.toString() || "",
+        decisionMaker: project.decisionMaker || "",
+        contactPerson: project.contactPerson || "",
+        deploymentType: project.deploymentType,
+        feasibilityScore: project.feasibilityScore?.toString() || "",
+        expectedCompletionDate: project.expectedCompletionDate ? new Date(project.expectedCompletionDate) : undefined,
+        stepDates: DEFAULT_STEPS.map((s) => {
+          const step = project.steps.find((st) => st.stepOrder === s.stepOrder);
+          return {
+            stepOrder: s.stepOrder,
+            startDate: step?.startDate ? new Date(step.startDate) : undefined,
+            endDate: step?.endDate ? new Date(step.endDate) : undefined
+          };
+        })
+      });
     }
-
-    const currentCompareDate = step.startDate || step.endDate;
-    if (currentCompareDate) {
-      const prevFilledSteps = stepDates
-        .filter((sd) => sd.stepOrder < stepOrder && (sd.startDate || sd.endDate))
-        .sort((a, b) => b.stepOrder - a.stepOrder);
-
-      if (prevFilledSteps.length > 0) {
-        const closestPrev = prevFilledSteps[0];
-        const prevCompareDate = closestPrev.endDate || closestPrev.startDate;
-        if (prevCompareDate && currentCompareDate < prevCompareDate) {
-          const prevInfo = DEFAULT_STEPS.find((s) => s.stepOrder === closestPrev.stepOrder);
-          return `Không được trước ngày của Bước ${closestPrev.stepOrder} (${prevInfo?.stepName})`;
-        }
-      }
-    }
-    return null;
-  };
+  }, [project, reset]);
 
   const onSubmit = async (data: FormValues) => {
     if (!project) return;
     setError("");
 
-    // 1. Kiểm tra từng bước: ngày bắt đầu không được sau ngày kết thúc
-    for (const step of stepDates) {
-      if (step.startDate && step.endDate && step.startDate > step.endDate) {
-        const stepInfo = DEFAULT_STEPS.find((s) => s.stepOrder === step.stepOrder);
-        const errMsg = `Bước ${step.stepOrder} (${stepInfo?.stepName}): Ngày bắt đầu không được sau ngày kết thúc.`;
-        setError(errMsg);
-        toast.error(errMsg);
-        return;
-      }
-    }
-
-    // 2. Kiểm tra tính tuần tự: ngày của bước sau không được trước ngày của bước trước
-    const filledSteps = stepDates.filter((sd) => sd.startDate || sd.endDate).sort((a, b) => a.stepOrder - b.stepOrder);
-
-    for (let i = 1; i < filledSteps.length; i++) {
-      const current = filledSteps[i];
-      const prev = filledSteps[i - 1];
-
-      const currentCompareDate = current.startDate || current.endDate;
-      const prevCompareDate = prev.endDate || prev.startDate;
-
-      if (currentCompareDate && prevCompareDate && currentCompareDate < prevCompareDate) {
-        const currentInfo = DEFAULT_STEPS.find((s) => s.stepOrder === current.stepOrder);
-        const prevInfo = DEFAULT_STEPS.find((s) => s.stepOrder === prev.stepOrder);
-        const errMsg = `Ngày của Bước ${current.stepOrder} (${currentInfo?.stepName}) không được trước ngày của Bước ${prev.stepOrder} (${prevInfo?.stepName}).`;
-        setError(errMsg);
-        toast.error(errMsg);
-        return;
-      }
-    }
-
     const formattedData = {
       id: project.id,
       name: data.name,
-      description: data.description || undefined,
+      description: data.description,
       category: data.category as "GPS_AN_NINH" | "KHCP_DN" | "GIAO_TIEP_CAN",
-      investor: data.investor || undefined,
-      expectedRevenue: data.expectedRevenue ? parseFloat(data.expectedRevenue) : undefined,
-      decisionMaker: data.decisionMaker || undefined,
-      contactPerson: data.contactPerson || undefined,
+      investor: data.investor,
+      expectedRevenue: parseFloat(data.expectedRevenue),
+      decisionMaker: data.decisionMaker,
+      contactPerson: data.contactPerson,
       deploymentType: data.deploymentType as "MUA" | "THUE",
-      feasibilityScore: data.feasibilityScore ? parseInt(data.feasibilityScore, 10) : undefined,
-      expectedCompletionDate: data.expectedCompletionDate
-        ? format(data.expectedCompletionDate, "yyyy-MM-dd")
-        : undefined,
-      stepDates: stepDates
-        .filter((sd) => sd.startDate || sd.endDate)
-        .map((sd) => ({
-          stepOrder: sd.stepOrder,
-          startDate: sd.startDate ? format(sd.startDate, "yyyy-MM-dd") : undefined,
-          endDate: sd.endDate ? format(sd.endDate, "yyyy-MM-dd") : undefined
-        }))
+      feasibilityScore: parseInt(data.feasibilityScore, 10),
+      expectedCompletionDate: format(data.expectedCompletionDate, "yyyy-MM-dd"),
+      stepDates: data.stepDates.map((sd) => ({
+        stepOrder: sd.stepOrder,
+        startDate: format(sd.startDate, "yyyy-MM-dd"),
+        endDate: format(sd.endDate, "yyyy-MM-dd")
+      }))
     };
 
     const result = await updateProject(formattedData);
@@ -414,14 +403,17 @@ export function UpdateProjectDialog({ open, onOpenChange, project }: UpdateProje
             </div>
 
             <div className="mt-3 space-y-2">
-              {DEFAULT_STEPS.map((step) => {
-                const dates = stepDates.find((sd) => sd.stepOrder === step.stepOrder)!;
-                const stepError = getStepError(step.stepOrder);
+              {fields.map((field, index) => {
+                const step = DEFAULT_STEPS.find((s) => s.stepOrder === field.stepOrder)!;
+                const startDateError = errors.stepDates?.[index]?.startDate?.message;
+                const endDateError = errors.stepDates?.[index]?.endDate?.message;
+                const hasError = !!(startDateError || endDateError);
+
                 return (
                   <div
-                    key={step.stepOrder}
+                    key={field.id}
                     className={`rounded-lg border p-3 transition-all ${
-                      stepError ? "border-red-500/50 bg-red-500/5" : "border-(--color-border)"
+                      hasError ? "border-red-500/50 bg-red-500/5" : "border-(--color-border)"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -435,22 +427,31 @@ export function UpdateProjectDialog({ open, onOpenChange, project }: UpdateProje
                             <Label className="text-muted-foreground text-xs">
                               Bắt đầu <span className="text-(--color-destructive)">*</span>
                             </Label>
-                            <DatePicker
-                              value={dates.startDate}
-                              onChange={(date) => updateStepDate(step.stepOrder, "startDate", date)}
+                            <Controller
+                              name={`stepDates.${index}.startDate`}
+                              control={control}
+                              render={({ field: controllerField }) => (
+                                <DatePicker value={controllerField.value} onChange={controllerField.onChange} />
+                              )}
                             />
+                            {startDateError && (
+                              <p className="mt-1 text-xs font-medium text-red-500">{startDateError}</p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <Label className="text-muted-foreground text-xs">
                               Kết thúc <span className="text-(--color-destructive)">*</span>
                             </Label>
-                            <DatePicker
-                              value={dates.endDate}
-                              onChange={(date) => updateStepDate(step.stepOrder, "endDate", date)}
+                            <Controller
+                              name={`stepDates.${index}.endDate`}
+                              control={control}
+                              render={({ field: controllerField }) => (
+                                <DatePicker value={controllerField.value} onChange={controllerField.onChange} />
+                              )}
                             />
+                            {endDateError && <p className="mt-1 text-xs font-medium text-red-500">{endDateError}</p>}
                           </div>
                         </div>
-                        {stepError && <p className="mt-1.5 text-xs font-medium text-red-500">{stepError}</p>}
                       </div>
                       <div className="text-muted-foreground shrink-0 text-xs">{step.stepOrder * 25}%</div>
                     </div>
