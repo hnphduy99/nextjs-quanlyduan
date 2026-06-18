@@ -38,9 +38,10 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Quan hệ
-  projects    Project[]    // Dự án do user tạo
-  projectLogs ProjectLog[] // Log cập nhật tiến độ
-  activityLogs ActivityLog[] // Nhật ký hoạt động
+  projects      Project[]      // Dự án do user tạo
+  projectLogs   ProjectLog[]   // Log cập nhật tiến độ
+  activityLogs  ActivityLog[]  // Nhật ký hoạt động
+  notifications Notification[] @relation("UserNotifications")
 
   @@map("users")
 }
@@ -78,10 +79,11 @@ model Project {
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
   // Quan hệ
-  createdBy User               @relation(fields: [createdById], references: [id])
-  steps     ProjectStepConfig[]
-  logs      ProjectLog[]
-  files     ProjectFile[]
+  createdBy     User                @relation(fields: [createdById], references: [id])
+  steps         ProjectStepConfig[]
+  logs          ProjectLog[]
+  files         ProjectFile[]
+  notifications Notification[]
 
   @@map("projects")
 }
@@ -157,4 +159,30 @@ model ActivityLog {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("activity_logs")
+}
+
+// === NOTIFICATION MODELS ===
+
+enum NotificationType {
+  AUTO_OVERDUE
+  MANUAL_REMINDER
+}
+
+/// Bảng lịch sử thông báo nhắc nhở và cảnh báo trễ hạn
+model Notification {
+  id           String           @id @default(cuid())
+  projectId    String           @map("project_id")
+  recipientId  String           @map("recipient_id")
+  type         NotificationType
+  sentAt       DateTime         @default(now()) @map("sent_at")
+  status       String           // "SUCCESS" hoặc "FAILED"
+  errorMessage String?          @db.Text @map("error_message")
+  overdueDays  Int              @map("overdue_days")
+  stepName     String           @map("step_name")
+
+  // Quan hệ
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recipient    User             @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }

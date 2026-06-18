@@ -1,3 +1,4 @@
+import { getProjectNotifications } from "@/actions/email";
 import { getProjectById } from "@/actions/project";
 import { ProjectLogTable } from "@/components/project-log-table";
 import { ProgressUpdateForm } from "@/components/project/progress-update-form";
@@ -28,7 +29,11 @@ import { notFound } from "next/navigation";
 
 export default async function ProjectDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
-  const [user, project] = await Promise.all([getCurrentUser(), getProjectById(id)]);
+  const [user, project, notifications] = await Promise.all([
+    getCurrentUser(),
+    getProjectById(id),
+    getProjectNotifications(id)
+  ]);
 
   if (!user || !project) notFound();
 
@@ -64,6 +69,9 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
             {project.description && <p className="text-muted-foreground mt-1 text-sm">{project.description}</p>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {/* {isOverdue && (user.role === "ADMIN" || user.role === "PM") && (
+              <ReminderButton projectId={project.id} projectName={project.name} />
+            )} */}
             <Badge variant={project.percentage === 100 ? "success" : "default"} className="px-3 py-1 text-base">
               {project.percentage}%
             </Badge>
@@ -216,6 +224,19 @@ export default async function ProjectDetailPage(props: { params: Promise<{ id: s
           <ProjectLogTable logs={project.logs} files={project.files} />
         </CardContent>
       </Card>
+
+      {/* Lịch sử nhắc nhở/cảnh báo */}
+      {/* <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BellRing className="text-primary h-5 w-5" />
+            Lịch sử nhắc nhở ({notifications.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <NotificationHistory notifications={notifications} />
+        </CardContent>
+      </Card> */}
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
   SidebarMenuItem
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { BarChart3, FolderKanban, ScrollText, Users } from "lucide-react";
+import { BarChart3, BellRing, FolderKanban, ScrollText, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -40,6 +40,12 @@ const navItems = [
     label: "Nhật ký hoạt động",
     href: "/logs",
     icon: ScrollText,
+    roles: ["ADMIN"]
+  },
+  {
+    label: "Quản lý thông báo",
+    href: "/notifications",
+    icon: BellRing,
     roles: ["ADMIN"]
   }
 ];
