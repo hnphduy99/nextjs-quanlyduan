@@ -2,13 +2,14 @@
 
 import { getProjects } from "@/actions/project";
 import { DeleteProjectButton } from "@/components/delete-project-button";
-import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { UpdateProjectDialog } from "@/components/update-project-dialog";
+import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { formatDate } from "@/lib/utils";
-import { ArrowRight, Clock, FolderKanban, Loader2, User } from "lucide-react";
+import { ArrowRight, Clock, FolderKanban, Loader2, Pencil, User } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -18,13 +19,16 @@ interface ProjectsClientProps {
   initialProjects: ProjectItem[];
   initialHasMore: boolean;
   canDelete: boolean;
+  canEdit: boolean;
 }
 
-export function ProjectsClient({ initialProjects, initialHasMore, canDelete }: ProjectsClientProps) {
+export function ProjectsClient({ initialProjects, initialHasMore, canDelete, canEdit }: ProjectsClientProps) {
   const [projects, setProjects] = useState<ProjectItem[]>(initialProjects);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isPending, startTransition] = useTransition();
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
 
   const [prevInitialProjects, setPrevInitialProjects] = useState(initialProjects);
   if (initialProjects !== prevInitialProjects) {
@@ -117,6 +121,18 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete }: P
                           Chi tiết <ArrowRight className="ml-1 h-3 w-3" />
                         </Badge>
                       </Link>
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setEditOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       {(canDelete || project.percentage !== 100) && (
                         <DeleteProjectButton projectId={project.id} projectName={project.name} />
                       )}
@@ -153,6 +169,9 @@ export function ProjectsClient({ initialProjects, initialHasMore, canDelete }: P
             </div>
           )}
         </div>
+      )}
+      {editOpen && selectedProject && (
+        <UpdateProjectDialog open={editOpen} onOpenChange={setEditOpen} project={selectedProject} />
       )}
     </div>
   );

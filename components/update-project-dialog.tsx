@@ -1,6 +1,6 @@
 "use client";
 
-import { createProject } from "@/actions/project";
+import { updateProject } from "@/actions/project";
 import { Button } from "@/components/ui/button";
 import DatePicker from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,16 +11,41 @@ import { CATEGORY_OPTIONS, DEPLOYMENT_OPTIONS } from "@/constants/project";
 import { DEFAULT_STEPS } from "@/lib/project-constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Building2, CircleDollarSign, Loader2, Phone, Plus, ShieldCheck, TrendingUp } from "lucide-react";
+import { Building2, CircleDollarSign, Loader2, Phone, Save, ShieldCheck, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Textarea } from "./ui/textarea";
 
-interface CreateProjectDialogProps {
+interface ProjectStep {
+  id: string;
+  projectId: string;
+  stepName: string;
+  stepOrder: number;
+  startDate: Date | string | null;
+  endDate: Date | string | null;
+}
+
+interface ProjectData {
+  id: string;
+  name: string;
+  description: string | null;
+  category: "GPS_AN_NINH" | "KHCP_DN" | "GIAO_TIEP_CAN";
+  investor: string | null;
+  expectedRevenue: number | null;
+  decisionMaker: string | null;
+  contactPerson: string | null;
+  deploymentType: "MUA" | "THUE";
+  feasibilityScore: number | null;
+  expectedCompletionDate: Date | string | null;
+  steps: ProjectStep[];
+}
+
+interface UpdateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  project: ProjectData | null;
 }
 
 interface StepDate {
@@ -44,33 +69,42 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
+export function UpdateProjectDialog({ open, onOpenChange, project }: UpdateProjectDialogProps) {
   const {
     register,
     handleSubmit,
-    reset,
     control,
     formState: { errors, isSubmitting }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      investor: "",
-      expectedRevenue: "",
-      decisionMaker: "",
-      contactPerson: "",
-      feasibilityScore: "",
-      expectedCompletionDate: undefined
+      name: project?.name || "",
+      description: project?.description || "",
+      category: project?.category,
+      investor: project?.investor || "",
+      expectedRevenue: project?.expectedRevenue?.toString() || "",
+      decisionMaker: project?.decisionMaker || "",
+      contactPerson: project?.contactPerson || "",
+      deploymentType: project?.deploymentType,
+      feasibilityScore: project?.feasibilityScore?.toString() || "",
+      expectedCompletionDate: project?.expectedCompletionDate ? new Date(project.expectedCompletionDate) : undefined
     }
   });
 
   const [error, setError] = useState("");
-
-  // Step dates — managed via local state (not part of main validation)
-  const [stepDates, setStepDates] = useState<StepDate[]>(
-    DEFAULT_STEPS.map((s) => ({ stepOrder: s.stepOrder, startDate: undefined, endDate: undefined }))
-  );
+  const [stepDates, setStepDates] = useState<StepDate[]>(() => {
+    if (project) {
+      return DEFAULT_STEPS.map((s) => {
+        const step = project.steps.find((st) => st.stepOrder === s.stepOrder);
+        return {
+          stepOrder: s.stepOrder,
+          startDate: step?.startDate ? new Date(step.startDate) : undefined,
+          endDate: step?.endDate ? new Date(step.endDate) : undefined
+        };
+      });
+    }
+    return DEFAULT_STEPS.map((s) => ({ stepOrder: s.stepOrder, startDate: undefined, endDate: undefined }));
+  });
 
   const updateStepDate = (stepOrder: number, field: "startDate" | "endDate", value: Date | undefined) => {
     setStepDates((prev) => prev.map((sd) => (sd.stepOrder === stepOrder ? { ...sd, [field]: value } : sd)));
@@ -102,13 +136,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     return null;
   };
 
-  const resetForm = () => {
-    reset();
-    setStepDates(DEFAULT_STEPS.map((s) => ({ stepOrder: s.stepOrder, startDate: undefined, endDate: undefined })));
-    setError("");
-  };
-
   const onSubmit = async (data: FormValues) => {
+    if (!project) return;
     setError("");
 
     // 1. Kiểm tra từng bước: ngày bắt đầu không được sau ngày kết thúc
@@ -143,6 +172,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     }
 
     const formattedData = {
+      id: project.id,
       name: data.name,
       description: data.description || undefined,
       category: data.category as "GPS_AN_NINH" | "KHCP_DN" | "GIAO_TIEP_CAN",
@@ -164,13 +194,12 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
         }))
     };
 
-    const result = await createProject(formattedData);
+    const result = await updateProject(formattedData);
     if (result?.error) {
       setError(result.error);
       toast.error(result.error);
     } else {
-      toast.success("Tạo dự án thành công!");
-      resetForm();
+      toast.success("Cập nhật dự án thành công!");
       onOpenChange(false);
     }
   };
@@ -179,8 +208,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-[95vw] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Tạo dự án mới</DialogTitle>
-          <DialogDescription>Nhập đầy đủ thông tin để tạo dự án và 4 bước triển khai tự động</DialogDescription>
+          <DialogTitle className="text-xl font-bold">Chỉnh sửa dự án</DialogTitle>
+          <DialogDescription>Cập nhật thông tin dự án và thời hạn các bước triển khai</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -194,16 +223,16 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             </h3>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="project-name">
+                <Label htmlFor="edit-project-name">
                   Tên dự án <span className="text-(--color-destructive)">*</span>
                 </Label>
-                <Input id="project-name" placeholder="VD: Hệ thống camera giám sát ABC..." {...register("name")} />
+                <Input id="edit-project-name" placeholder="VD: Hệ thống camera giám sát ABC..." {...register("name")} />
                 {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="project-desc">Mô tả</Label>
+                <Label htmlFor="edit-project-desc">Mô tả</Label>
                 <Textarea
-                  id="project-desc"
+                  id="edit-project-desc"
                   placeholder="Mô tả chi tiết dự án..."
                   rows={2}
                   {...register("description")}
@@ -275,20 +304,20 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             </h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="investor" className="flex items-center gap-1.5">
+                <Label htmlFor="edit-investor" className="flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5 text-(--color-text-muted)" />
                   Chủ đầu tư <span className="text-(--color-destructive)">*</span>
                 </Label>
-                <Input id="investor" placeholder="Tên công ty / tổ chức..." {...register("investor")} />
+                <Input id="edit-investor" placeholder="Tên công ty / tổ chức..." {...register("investor")} />
                 {errors.investor && <p className="text-sm text-red-500">{errors.investor.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="expected-revenue" className="flex items-center gap-1.5">
+                <Label htmlFor="edit-expected-revenue" className="flex items-center gap-1.5">
                   <CircleDollarSign className="h-3.5 w-3.5 text-(--color-text-muted)" />
                   Doanh thu dự kiến (trđ) <span className="text-(--color-destructive)">*</span>
                 </Label>
                 <Input
-                  id="expected-revenue"
+                  id="edit-expected-revenue"
                   type="number"
                   min={0}
                   step={0.1}
@@ -298,19 +327,27 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                 {errors.expectedRevenue && <p className="text-sm text-red-500">{errors.expectedRevenue.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="decision-maker" className="flex items-center gap-1.5">
+                <Label htmlFor="edit-decision-maker" className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 text-(--color-text-muted)" />
                   Người quyết định (Tên - SĐT) <span className="text-(--color-destructive)">*</span>
                 </Label>
-                <Input id="decision-maker" placeholder="VD: Nguyễn Văn A - 0901234567" {...register("decisionMaker")} />
+                <Input
+                  id="edit-decision-maker"
+                  placeholder="VD: Nguyễn Văn A - 0901234567"
+                  {...register("decisionMaker")}
+                />
                 {errors.decisionMaker && <p className="text-sm text-red-500">{errors.decisionMaker.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="contact-person" className="flex items-center gap-1.5">
+                <Label htmlFor="edit-contact-person" className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 text-(--color-text-muted)" />
                   Đầu mối (Tên - SĐT) <span className="text-(--color-destructive)">*</span>
                 </Label>
-                <Input id="contact-person" placeholder="VD: Trần Thị B - 0912345678" {...register("contactPerson")} />
+                <Input
+                  id="edit-contact-person"
+                  placeholder="VD: Trần Thị B - 0912345678"
+                  {...register("contactPerson")}
+                />
                 {errors.contactPerson && <p className="text-sm text-red-500">{errors.contactPerson.message}</p>}
               </div>
             </div>
@@ -326,13 +363,13 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             </h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="feasibility-score" className="flex items-center gap-1.5">
+                <Label htmlFor="edit-feasibility-score" className="flex items-center gap-1.5">
                   <TrendingUp className="h-3.5 w-3.5 text-(--color-text-muted)" />
                   Đánh giá khả thi (%) <span className="text-(--color-destructive)">*</span>
                 </Label>
                 <div className="relative">
                   <Input
-                    id="feasibility-score"
+                    id="edit-feasibility-score"
                     type="number"
                     min={0}
                     max={100}
@@ -440,7 +477,6 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
               type="button"
               variant="outline"
               onClick={() => {
-                resetForm();
                 onOpenChange(false);
               }}
             >
@@ -450,12 +486,12 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Đang tạo...
+                  Đang lưu...
                 </>
               ) : (
                 <>
-                  <Plus className="h-4 w-4" />
-                  Tạo dự án
+                  <Save className="h-4 w-4" />
+                  Lưu thay đổi
                 </>
               )}
             </Button>

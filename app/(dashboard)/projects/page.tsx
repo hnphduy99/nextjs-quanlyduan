@@ -63,6 +63,7 @@ export default async function ProjectsPage() {
         initialProjects={projectsData.projects}
         initialHasMore={projectsData.hasMore}
         canDelete={canDelete}
+        canEdit={canDelete}
       />
     </div>
   );

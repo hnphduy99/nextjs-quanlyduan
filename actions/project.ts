@@ -4,9 +4,19 @@ import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { logActivity } from "@/lib/audit-logger";
 import { getCurrentUser, hasPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  headerMapping,
+  normalizeKey,
+  parseCategory,
+  parseDateString,
+  parseDeploymentType,
+  parseFeasibilityScore,
+  parseNumber
+} from "@/lib/excel";
 import { calcPercentageByStep, DEFAULT_STEPS } from "@/lib/project-constants";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import * as xlsx from "xlsx";
 import { z } from "zod";
 
 // === ZOD SCHEMAS ===
@@ -20,16 +30,33 @@ const StepDateSchema = z.object({
 const CreateProjectSchema = z.object({
   name: z.string().min(1, "Tên dự án không được trống").max(200),
   description: z.string().optional(),
-  category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]).default("GPS_AN_NINH"),
+  category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]),
   investor: z.string().optional(),
   expectedRevenue: z.number().optional(),
   decisionMaker: z.string().optional(),
   contactPerson: z.string().optional(),
-  deploymentType: z.enum(["MUA", "THUE"]).default("MUA"),
+  deploymentType: z.enum(["MUA", "THUE"]),
   feasibilityScore: z.number().int().min(0).max(100).optional(),
   expectedCompletionDate: z.string().optional(),
   stepDates: z.array(StepDateSchema).optional()
 });
+
+const UpdateProjectSchema = z.object({
+  id: z.string().min(1, "ID dự án không được trống"),
+  name: z.string().min(1, "Tên dự án không được trống").max(200),
+  description: z.string().optional(),
+  category: z.enum(["GPS_AN_NINH", "KHCP_DN", "GIAO_TIEP_CAN"]),
+  investor: z.string().optional(),
+  expectedRevenue: z.number().optional(),
+  decisionMaker: z.string().optional(),
+  contactPerson: z.string().optional(),
+  deploymentType: z.enum(["MUA", "THUE"]),
+  feasibilityScore: z.number().int().min(0).max(100).optional(),
+  expectedCompletionDate: z.string().optional(),
+  stepDates: z.array(StepDateSchema).optional()
+});
+
+export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;
 
 const UpdateProgressSchema = z.object({
   projectId: z.string().min(1),
@@ -178,6 +205,84 @@ export async function updateProjectProgress(data: {
     if (error instanceof z.ZodError) return { error: error.issues[0].message };
     console.error("updateProjectProgress error:", error);
     return { error: "Có lỗi xảy ra khi cập nhật tiến độ" };
+  }
+}
+
+/**
+ * Cập nhật thông tin dự án (Chỉ ADMIN, PM)
+ */
+export async function updateProject(data: UpdateProjectInput): Promise<{ error?: string; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Chưa đăng nhập" };
+
+  if (user.role !== "ADMIN" && user.role !== "PM") {
+    return { error: "Bạn không có quyền cập nhật dự án này" };
+  }
+
+  try {
+    const validated = UpdateProjectSchema.parse(data);
+
+    // Kiểm tra dự án tồn tại
+    const project = await prisma.project.findUnique({
+      where: { id: validated.id },
+      include: { steps: true }
+    });
+
+    if (!project) {
+      return { error: "Không tìm thấy dự án" };
+    }
+
+    // Cập nhật thông tin dự án và các bước bằng transaction
+    await prisma.$transaction(async (tx) => {
+      // 1. Cập nhật thông tin cơ bản
+      await tx.project.update({
+        where: { id: validated.id },
+        data: {
+          name: validated.name,
+          description: validated.description,
+          category: validated.category,
+          investor: validated.investor,
+          expectedRevenue: validated.expectedRevenue,
+          decisionMaker: validated.decisionMaker,
+          contactPerson: validated.contactPerson,
+          deploymentType: validated.deploymentType,
+          feasibilityScore: validated.feasibilityScore,
+          expectedCompletionDate: validated.expectedCompletionDate ? new Date(validated.expectedCompletionDate) : null
+        }
+      });
+
+      // 2. Cập nhật ngày của các bước nếu có
+      if (validated.stepDates && validated.stepDates.length > 0) {
+        for (const sd of validated.stepDates) {
+          const existingStep = project.steps.find((s) => s.stepOrder === sd.stepOrder);
+          if (existingStep) {
+            await tx.projectStepConfig.update({
+              where: { id: existingStep.id },
+              data: {
+                startDate: sd.startDate ? new Date(sd.startDate) : null,
+                endDate: sd.endDate ? new Date(sd.endDate) : null
+              }
+            });
+          }
+        }
+      }
+
+      // Ghi log hoạt động
+      await logActivity(user.id, "UPDATE_PROJECT", {
+        projectId: validated.id,
+        projectName: validated.name
+      });
+    });
+
+    revalidatePath(`/projects/${validated.id}`);
+    revalidatePath("/projects");
+    revalidatePath("/dashboard");
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) return { error: error.issues[0].message };
+    console.error("updateProject error:", error);
+    return { error: "Có lỗi xảy ra khi cập nhật dự án" };
   }
 }
 
@@ -423,4 +528,189 @@ export async function getDashboardStats(filters?: { userId?: string; dateFrom?: 
     stepDistribution,
     allUsers
   };
+}
+
+/**
+ * Import nhiều dự án từ file excel
+ */
+export async function importProjects(formData: FormData): Promise<{
+  error?: string;
+  success?: boolean;
+  successCount?: number;
+  errorCount?: number;
+  errorReportBase64?: string;
+}> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Chưa đăng nhập" };
+
+  const file = formData.get("file") as File | null;
+  if (!file) return { error: "Không tìm thấy file tải lên" };
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const workbook = xlsx.read(buffer, { type: "buffer", cellDates: true });
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) return { error: "File Excel không có dữ liệu" };
+
+    const sheet = workbook.Sheets[sheetName];
+    const rows = xlsx.utils.sheet_to_json(sheet) as Record<string, any>[];
+
+    let successCount = 0;
+    const errors: Array<{ rowNumber: number; projectName: string; reason: string }> = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = i + 2; // Dòng 1 là tiêu đề, dữ liệu bắt đầu từ dòng 2
+
+      // Map tiêu đề cột sang trường của schema
+      const mappedRow: Record<string, any> = {};
+      for (const [key, value] of Object.entries(row)) {
+        const normKey = normalizeKey(key);
+        const schemaKey = headerMapping[normKey];
+        if (schemaKey) {
+          mappedRow[schemaKey] = value;
+        }
+      }
+
+      // Bỏ qua dòng trống hoàn toàn
+      if (Object.keys(mappedRow).length === 0) {
+        continue;
+      }
+
+      const projectName = mappedRow.name ? String(mappedRow.name).trim() : "";
+
+      try {
+        const parsedData = {
+          name: projectName,
+          description: mappedRow.description ? String(mappedRow.description).trim() : undefined,
+          category: parseCategory(mappedRow.category),
+          investor: mappedRow.investor ? String(mappedRow.investor).trim() : undefined,
+          expectedRevenue: parseNumber(mappedRow.expectedRevenue),
+          decisionMaker: mappedRow.decisionMaker ? String(mappedRow.decisionMaker).trim() : undefined,
+          contactPerson: mappedRow.contactPerson ? String(mappedRow.contactPerson).trim() : undefined,
+          deploymentType: parseDeploymentType(mappedRow.deploymentType),
+          feasibilityScore: parseFeasibilityScore(mappedRow.feasibilityScore),
+          expectedCompletionDate: parseDateString(mappedRow.expectedCompletionDate)
+        };
+
+        // Phân tích ngày cho từng bước
+        const stepDatesParsed = [1, 2, 3, 4].map((order) => {
+          const startRaw = mappedRow[`step${order}_startDate`];
+          const endRaw = mappedRow[`step${order}_endDate`];
+          return {
+            stepOrder: order,
+            startDate: startRaw ? parseDateString(startRaw) : undefined,
+            endDate: endRaw ? parseDateString(endRaw) : undefined
+          };
+        });
+
+        // Kiểm tra tính hợp lệ của ngày trong từng bước
+        for (const step of stepDatesParsed) {
+          if (step.startDate && step.endDate && new Date(step.startDate) > new Date(step.endDate)) {
+            throw new Error(`Bước ${step.stepOrder}: Ngày bắt đầu không được sau ngày kết thúc.`);
+          }
+        }
+
+        // Kiểm tra tính tuần tự giữa các bước
+        const filledSteps = stepDatesParsed
+          .filter((sd) => sd.startDate || sd.endDate)
+          .sort((a, b) => a.stepOrder - b.stepOrder);
+
+        for (let i = 1; i < filledSteps.length; i++) {
+          const current = filledSteps[i];
+          const prev = filledSteps[i - 1];
+          const currentCompare = current.startDate
+            ? new Date(current.startDate)
+            : current.endDate
+              ? new Date(current.endDate)
+              : null;
+          const prevCompare = prev.endDate ? new Date(prev.endDate) : prev.startDate ? new Date(prev.startDate) : null;
+
+          if (currentCompare && prevCompare && currentCompare < prevCompare) {
+            throw new Error(`Ngày của Bước ${current.stepOrder} không được trước ngày của Bước ${prev.stepOrder}.`);
+          }
+        }
+
+        const validated = CreateProjectSchema.parse(parsedData);
+
+        await prisma.project.create({
+          data: {
+            name: validated.name,
+            description: validated.description,
+            category: validated.category,
+            investor: validated.investor,
+            expectedRevenue: validated.expectedRevenue,
+            decisionMaker: validated.decisionMaker,
+            contactPerson: validated.contactPerson,
+            deploymentType: validated.deploymentType,
+            feasibilityScore: validated.feasibilityScore,
+            expectedCompletionDate: validated.expectedCompletionDate
+              ? new Date(validated.expectedCompletionDate)
+              : undefined,
+            currentStepOrder: 1,
+            percentage: 0,
+            createdById: user.id,
+            steps: {
+              create: DEFAULT_STEPS.map((step) => {
+                const dates = stepDatesParsed.find((sd) => sd.stepOrder === step.stepOrder);
+                return {
+                  stepName: step.stepName,
+                  stepOrder: step.stepOrder,
+                  startDate: dates?.startDate ? new Date(dates.startDate) : null,
+                  endDate: dates?.endDate ? new Date(dates.endDate) : null
+                };
+              })
+            }
+          }
+        });
+
+        successCount++;
+      } catch (error: any) {
+        let reason = "Lỗi không xác định";
+        if (error instanceof z.ZodError) {
+          reason = error.issues.map((e: z.ZodIssue) => `${e.path.join(".")}: ${e.message}`).join("; ");
+        } else if (error instanceof Error) {
+          reason = error.message;
+        }
+        errors.push({
+          rowNumber: rowNum,
+          projectName: projectName || "(Không có tên)",
+          reason
+        });
+      }
+    }
+
+    let errorReportBase64: string | undefined = undefined;
+    if (errors.length > 0) {
+      const errorWb = xlsx.utils.book_new();
+      const errorWs = xlsx.utils.json_to_sheet(
+        errors.map((e) => ({
+          Dòng: e.rowNumber,
+          "Tên dự án": e.projectName,
+          "Lý do lỗi": e.reason
+        }))
+      );
+      xlsx.utils.book_append_sheet(errorWb, errorWs, "Danh sách lỗi");
+      const errorBuffer = xlsx.write(errorWb, { type: "buffer", bookType: "xlsx" });
+      errorReportBase64 = errorBuffer.toString("base64");
+    }
+
+    await logActivity(user.id, "IMPORT_PROJECTS", {
+      totalCount: rows.length,
+      successCount,
+      errorCount: errors.length
+    });
+
+    revalidatePath("/projects");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      successCount,
+      errorCount: errors.length,
+      errorReportBase64
+    };
+  } catch (err: any) {
+    return { error: err?.message || "Lỗi khi xử lý file Excel" };
+  }
 }

@@ -109,8 +109,8 @@ export function FileUpload({ projectId, stepOrder, existingFiles = [] }: FileUpl
         className={cn(
           "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 transition-all duration-200",
           isDragging
-            ? "bg-primary/5 border-(--color-primary)"
-            : "hover:border-primary/50 border-(--color-border) hover:bg-(--color-surface)"
+            ? "bg-primary/5 border-primary"
+            : "hover:border-primary/50 border-border hover:bg-(--color-surface)"
         )}
         onDragOver={(e) => {
           e.preventDefault();
@@ -144,6 +144,7 @@ export function FileUpload({ projectId, stepOrder, existingFiles = [] }: FileUpl
           accept={ALLOWED_EXTENSIONS}
           className="hidden"
           onChange={(e) => handleUpload(e.target.files)}
+          aria-label="Chọn file để upload"
         />
       </div>
 
