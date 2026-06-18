@@ -1,7 +1,7 @@
 "use client";
 
-import { CreateProjectDialog } from "@/components/create-project-dialog";
-import { ImportProjectsDialog } from "@/components/import-projects-dialog";
+import { CreateProjectDialog } from "@/components/project/create-project-dialog";
+import { ImportProjectsDialog } from "@/components/project/import-projects-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload } from "lucide-react";
 import { useState } from "react";

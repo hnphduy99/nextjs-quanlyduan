@@ -1,7 +1,7 @@
 import { getProjectById } from "@/actions/project";
-import { ProgressUpdateForm } from "@/components/progress-update-form";
 import { ProjectLogTable } from "@/components/project-log-table";
-import { StepTimeline } from "@/components/step-timeline";
+import { ProgressUpdateForm } from "@/components/project/progress-update-form";
+import { StepTimeline } from "@/components/project/step-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";

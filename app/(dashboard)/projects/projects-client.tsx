@@ -1,12 +1,12 @@
 "use client";
 
 import { getProjects } from "@/actions/project";
-import { DeleteProjectButton } from "@/components/delete-project-button";
+import { DeleteProjectButton } from "@/components/project/delete-project-button";
+import { UpdateProjectDialog } from "@/components/project/update-project-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { UpdateProjectDialog } from "@/components/update-project-dialog";
 import { PAGINATION_CONFIG } from "@/constants/pagination";
 import { formatDate } from "@/lib/utils";
 import { ArrowRight, Clock, FolderKanban, Loader2, Pencil, User } from "lucide-react";

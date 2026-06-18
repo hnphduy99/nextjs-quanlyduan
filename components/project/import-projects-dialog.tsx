@@ -206,15 +206,6 @@ export function ImportProjectsDialog({ open, onOpenChange }: ImportProjectsDialo
               )}
             </div>
 
-            {/* Hint of columns */}
-            <div className="bg-muted/30 border-muted space-y-1.5 border p-3 font-mono text-xs">
-              <p className="text-foreground mb-1 font-semibold">Cột trong Excel:</p>
-              <p>· Tên dự án, Phân loại, Hình thức triển khai</p>
-              <p>· Chủ đầu tư, Doanh thu dự kiến, Người quyết định</p>
-              <p>· Đầu mối, Đánh giá khả thi, Ngày nghiệm thu dự kiến</p>
-              <p>· Ngày bắt đầu/kết thúc Bước 1 đến Bước 4</p>
-            </div>
-
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={handleClose} disabled={loading}>
