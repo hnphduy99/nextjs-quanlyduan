@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitlab
+.vscode
+coverage
+logs
+*.log
+README.md
+Dockerfile
+docker-compose.yml
+AGENTS.md
+CLAUDE.md
+.gitignore
+.agents
