@@ -13,3 +13,4 @@ AGENTS.md
 CLAUDE.md
 .gitignore
 .agents
+app/generated/prisma
